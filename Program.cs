@@ -72,40 +72,78 @@ namespace simulator
          Process tempProc = new Process();
          IO tempIO = new IO();
 
-         // Read in the configuration file from argument
+         //
+         // Read in the configuration file from command-line argument
+         //
+         // Checks if user had input an argument, if not exit the program
          if( args.Length == 0 )
          {
             Console.WriteLine("Please enter the name of the configuration file.");
             Environment.Exit(1);
          }
+         // If there is a valid argument, start reading in data
          else
          {
+            // Get the configuration file name
             configFile = args[0];
-            configPath = Directory.GetCurrentDirectory();  // This is the current directory of the running program, 
+            configPath = Directory.GetCurrentDirectory();  // This is the current directory of the running program for our purposes, 
                                                            // PUT FILES HERE, MIGHT CHANGE LATER
             //Console.WriteLine(configPath);                 // TEST
-           // Console.WriteLine(configFile);
-            string[] lines = File.ReadAllLines(configFile);
-            int index;
-            for (index = 0; index < lines.Length; index++ )
+            //Console.WriteLine(configFile);
+            // Read in all the lines to an array, prints an error if an exception is caught
+            try
             {
-               if (lines[index].Contains(":"))
+               string[] lines = File.ReadAllLines(configFile);
+               int index;
+
+               // Gets the right side of the semi-colon and replaces the full lines in the previous array
+               for (index = 0; index < lines.Length; index++)
                {
-                  lines[index] = lines[index].Split(':')[1];
-                  Console.WriteLine(lines[index]);
+                  if (lines[index].Contains(":"))
+                  {
+                     lines[index] = lines[index].Split(':')[1];
+                     // Gets rid of white-space
+                     lines[index] = lines[index].TrimStart();
+
+                     //Console.WriteLine(lines[index]);
+
+                  }
                }
+
+               // Update Global Variables
+               GlobalVariable.version = lines[1];
+               GlobalVariable.quantum = int.Parse(lines[2]);
+               GlobalVariable.scheduler = lines[3];
+               GlobalVariable.filePath = configPath;
+               GlobalVariable.procTime = int.Parse(lines[5]);
+               GlobalVariable.monitorTime = int.Parse(lines[6]);
+               GlobalVariable.hdTime = int.Parse(lines[7]);
+               GlobalVariable.printerTime = int.Parse(lines[8]);
+               GlobalVariable.kbTime = int.Parse(lines[9]);
+               GlobalVariable.memType = lines[10];
+               GlobalVariable.log = lines[11];
+
+               /*
+               Console.WriteLine(GlobalVariable.version);
+               Console.WriteLine(GlobalVariable.quantum);
+               Console.WriteLine(GlobalVariable.scheduler);
+               Console.WriteLine(GlobalVariable.filePath);
+               Console.WriteLine(GlobalVariable.procTime);
+               Console.WriteLine(GlobalVariable.monitorTime);
+               Console.WriteLine(GlobalVariable.hdTime);
+               Console.WriteLine(GlobalVariable.printerTime);
+               Console.WriteLine(GlobalVariable.kbTime);
+               Console.WriteLine(GlobalVariable.memType);
+               Console.WriteLine(GlobalVariable.log);
+               */
+
             }
-            GlobalVariable.version = lines[1];
-            GlobalVariable.quantum = int.Parse(lines[2]);
-            GlobalVariable.scheduler = lines[3];
-            GlobalVariable.filePath = lines[4];
-            GlobalVariable.procTime = int.Parse(lines[5]);
-            GlobalVariable.monitorTime = int.Parse(lines[6]);
-            GlobalVariable.hdTime = int.Parse(lines[7]);
-            GlobalVariable.printerTime = int.Parse(lines[8]);
-            GlobalVariable.kbTime = int.Parse(lines[9]);
-            GlobalVariable.memType = lines[10];
-            GlobalVariable.log = lines[11];
+
+            catch
+            {
+               Console.WriteLine("An error occured while reading the configuration file. Aborting program.");
+               Environment.Exit(1);
+            }
          }
 
          //string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");//Used on cpe lab comp
