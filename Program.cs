@@ -124,7 +124,7 @@ namespace simulator
                     GlobalVariable.memType = lines[10];
                     GlobalVariable.log = lines[11];
 
-                    
+                    /*
                     Console.WriteLine(GlobalVariable.version);
                     Console.WriteLine(GlobalVariable.quantum);
                     Console.WriteLine(GlobalVariable.scheduler);
@@ -136,7 +136,7 @@ namespace simulator
                     Console.WriteLine(GlobalVariable.kbTime);
                     Console.WriteLine(GlobalVariable.memType);
                     Console.WriteLine(GlobalVariable.log);
-                    
+                    */
 
                 }
 
@@ -160,11 +160,13 @@ namespace simulator
                 int q = index2 - index1;
                 //Console.WriteLine(x.Substring(index1, q));//Debugging
                 string temp = x.Substring(index1, q);
+                temp = temp.TrimStart();
                 ourData.Add(temp);
                 index1 = index2 + 1;
                 index2 = x.IndexOf(';', index2 + 1);
             }
             string temp2 = x.Substring(index1);
+            temp2 = temp2.TrimStart();
             ourData.Add(temp2);//Adds the final System End
             //End of data read in loop (to a list of strings)-----
 
