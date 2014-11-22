@@ -9,39 +9,42 @@ namespace ConsoleApplication2
 {
     class IO
     {
-        int initCT;
-        int remCT;
-        int beginTime;
-        int endTime;
-        char type;
-        string descriptor;
+        public int initCT;
+        public int remCT;
+        public int beginTime;
+        public int endTime;
+        public char type;
+        public string descriptor;
     }
     class Process
     {
-        int initCT;
-        int remCT;
-        List<IO> ioList = new List<IO>();
-        bool finished;
+        public int initCT;
+        public int remCT;
+        public List<IO> ioList = new List<IO>();
+        public bool finished = false;
     }
     class Application
     {
         public int PIDNum;
         public int numProc;
         public int procRem;
-        public List<Process> ioList = new List<Process>();
-        public bool finished;
+        public List<Process> procList = new List<Process>();
+        public bool finished = false;
     }
     class Program
     {
         static void Main(string[] args)
         {
             //Declare all variables
-            List<string> ourData = new List<string>();  //Temporary list to hold all meta data
             char lastOp = 'S';                          //Stores a value of last operation
-            int appIndex = 0, procIndex = 0;            //Application and process index variables
-                //Declaring Application List!
+            bool appStarted = false, procStarted = false;
+            int appIndex = 0, procIndex = 0, tempInt = 0;            //Application and process index variables
+                //Declaring Lists!
+                List<string> ourData = new List<string>();  //Temporary list to hold all meta data
                 List<Application> ourAppList = new List<Application>();
-
+                Application tempApp = new Application();
+                Process tempProc = new Process();
+                IO tempIO = new IO();
             //string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");//Used on cpe lab comp
             string dataFile = "S(start)0; A(start)0; P(run)13; I(keyboard)5; P(run)6; O(monitor)5; P(run)5; I(hard drive)5; P(run)7; A(end)0; A(start)0; P(run)10; I(keyboard)5; P(run)7; O(hard drive)5; P(run)15; A(end)0; A(start)0; P(run)13; I(hard drive)5; P(run)14; O(hard drive)5; P(run)13; I(hard drive)5; P(run)10; S(end)0.";
             //ABOVE IS AN EXAMPLE^ WE WILL FIX LATER
@@ -64,31 +67,106 @@ namespace ConsoleApplication2
             //Begin to store data in proper 
             foreach (string currentLine in ourData)
             {
-                Console.WriteLine(currentLine.Length);
                 //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
                 if (currentLine[0] == 'S' || currentLine[1] == 'S') //Handling System Operation
                 {
                     //Console.Write('S');
                     lastOp = 'S';
                 }
+
                 if (currentLine[0] == 'A' || currentLine[1] == 'A') //Handling Application Operation
                 {
                     //Console.Write('A');
-                    lastOp = 'A';
+                    if (appStarted)         //If this is the end of an application, simply change bool value
+                    {
+                        tempInt = tempApp.procList.Count;
+                        tempApp.numProc = tempInt;
+                        tempApp.procRem = tempInt;
+                        ourAppList.Add(tempApp);
+                        //Delete tempApp to prep for a new on
+                        appStarted = false;
+                    }
+                    else                    //Otherwise begin setting data for application
+                    {
+                        appStarted = true;
+                        tempApp.procList = new List<Process>();
+                        tempApp.PIDNum = appIndex;
+                        appIndex++;     //Increment number of applications
+
+                        //ourAppList.Add
+                        lastOp = 'A';
+                    }
                 }
+
                 if (currentLine[0] == 'P' || currentLine[1] == 'P') //Handling Process Operation
                 {
                     //Console.Write('P');
+                    int len = currentLine.Length;
+                    tempInt = 0;
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (currentLine[i] == ')' && (i+2) < len )
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48)*10;
+                            tempInt += (int)(currentLine[i + 2] - 48); 
+                            //Console.WriteLine(tempInt);
+                        }
+                        else if (currentLine[i] == ')')
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        tempProc.initCT = tempInt;
+                        tempProc.remCT = tempInt;
+                        tempProc.ioList = new List<IO>();
+                        //USE TEMPINT TO STORE INITCT FOR PROCESSES AND IO
+                    }
                     lastOp = 'P';
                 }
+
                 if (currentLine[0] == 'I' || currentLine[1] == 'I') //Handling Input Operation
                 {
                     //Console.Write('I');
+                    int len = currentLine.Length;
+                    tempInt = 0;
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (currentLine[i] == ')' && (i + 2) < len)
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48) * 10;
+                            tempInt += (int)(currentLine[i + 2] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        else if (currentLine[i] == ')')
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        //USE TEMPINT TO STORE INITCT FOR PROCESSES AND IO
+                    }
                     lastOp = 'I';
                 }
+
                 if (currentLine[0] == 'O' || currentLine[1] == 'O') //Handling Output Operation
                 {
                     //Console.Write('O');
+                    int len = currentLine.Length;
+                    tempInt = 0;
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (currentLine[i] == ')' && (i + 2) < len)
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48) * 10;
+                            tempInt += (int)(currentLine[i + 2] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        else if (currentLine[i] == ')')
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        //USE TEMPINT TO STORE INITCT FOR PROCESSES AND IO
+                    }
                     lastOp = 'O';
                 }
             }
