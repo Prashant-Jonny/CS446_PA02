@@ -39,6 +39,9 @@ namespace ConsoleApplication2
             List<string> ourData = new List<string>();  //Temporary list to hold all meta data
             char lastOp = 'S';                          //Stores a value of last operation
             int appIndex = 0, procIndex = 0;            //Application and process index variables
+                //Declaring Application List!
+                List<Application> ourAppList = new List<Application>();
+
             //string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");//Used on cpe lab comp
             string dataFile = "S(start)0; A(start)0; P(run)13; I(keyboard)5; P(run)6; O(monitor)5; P(run)5; I(hard drive)5; P(run)7; A(end)0; A(start)0; P(run)10; I(keyboard)5; P(run)7; O(hard drive)5; P(run)15; A(end)0; A(start)0; P(run)13; I(hard drive)5; P(run)14; O(hard drive)5; P(run)13; I(hard drive)5; P(run)10; S(end)0.";
             //ABOVE IS AN EXAMPLE^ WE WILL FIX LATER
@@ -61,6 +64,7 @@ namespace ConsoleApplication2
             //Begin to store data in proper 
             foreach (string currentLine in ourData)
             {
+                Console.WriteLine(currentLine.Length);
                 //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
                 if (currentLine[0] == 'S' || currentLine[1] == 'S') //Handling System Operation
                 {
