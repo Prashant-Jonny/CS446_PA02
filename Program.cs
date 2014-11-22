@@ -5,53 +5,65 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace ConsoleApplication2
+namespace simulator
 {
-    class IO
-    {
-        int initCT;
-        int remCT;
-        int beginTime;
-        int endTime;
-        char type;
-        string descriptor;
-    }
-    class Process
-    {
-        int initCT;
-        int remCT;
-        List<IO> ioList = new List<IO>();
-        bool finished;
-    }
+
     class Application
     {
         public int PIDNum;
         public int numProc;
         public int procRem;
-        public List<Process> ioList = new List<Process>();
-        public bool finished;
+        public List<Process> procList = new List<Process>();
+        public bool finished = false;
     }
+
+    class Process
+    {
+        public int initCT;
+        public int remCT;
+        public List<IO> ioList = new List<IO>();
+        public bool finished = false;
+    }
+
+    class IO
+    {
+        public int initCT;
+        public int remCT;
+        public int beginTime;
+        public int endTime;
+        public char type;
+        public string descriptor;
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
             //Declare all variables
-            List<string> ourData = new List<string>();  //Temporary list to hold all meta data
-            char lastOp = 'S';                          //Stores a value of last operation
-            int appIndex = 0, procIndex = 0;            //Application and process index variables
-            string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");
+            char lastOp = 'S';                                       // Stores a value of last operation
+            bool appStarted = false, procStarted = false;            // 
+            int appIndex = 0, procIndex = 0, tempInt = 0;            // Application and process index variables
 
+            //Declaring Lists!
+            List<string> ourData = new List<string>();               //Temporary list to hold all meta data
+            List<Application> ourAppList = new List<Application>();
+            Application tempApp = new Application();
+            Process tempProc = new Process();
+            IO tempIO = new IO();
+            //string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");//Used on cpe lab comp
+            string dataFile = "S(start)0; A(start)0; P(run)13; I(keyboard)5; P(run)6; O(monitor)5; P(run)5; I(hard drive)5; P(run)7; A(end)0; A(start)0; P(run)10; I(keyboard)5; P(run)7; O(hard drive)5; P(run)15; A(end)0; A(start)0; P(run)13; I(hard drive)5; P(run)14; O(hard drive)5; P(run)13; I(hard drive)5; P(run)10; S(end)0.";
+            //ABOVE IS AN EXAMPLE^ WE WILL FIX LATER
             //Prime the data read in loop-------------------------
             string x = dataFile;
             int index1 = 0, index2 = x.IndexOf(';');
-            while( index2 != -1)
+            while (index2 != -1)
             {
                 int q = index2 - index1;
                 //Console.WriteLine(x.Substring(index1, q));//Debugging
                 string temp = x.Substring(index1, q);
                 ourData.Add(temp);
-                index1 = index2+1;
-                index2 = x.IndexOf(';', index2+1);
+                index1 = index2 + 1;
+                index2 = x.IndexOf(';', index2 + 1);
             }
             string temp2 = x.Substring(index1);
             ourData.Add(temp2);//Adds the final System End
@@ -63,23 +75,104 @@ namespace ConsoleApplication2
                 //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
                 if (currentLine[0] == 'S' || currentLine[1] == 'S') //Handling System Operation
                 {
-                    Console.Write('S');
+                    //Console.Write('S');
+                    lastOp = 'S';
                 }
+
                 if (currentLine[0] == 'A' || currentLine[1] == 'A') //Handling Application Operation
                 {
-                    Console.Write('A');
+                    //Console.Write('A');
+                    if (appStarted)         //If this is the end of an application, simply change bool value
+                    {
+                        tempInt = tempApp.procList.Count;
+                        tempApp.numProc = tempInt;
+                        tempApp.procRem = tempInt;
+                        ourAppList.Add(tempApp);
+                        //Delete tempApp to prep for a new on
+                        appStarted = false;
+                    }
+                    else                    //Otherwise begin setting data for application
+                    {
+                        appStarted = true;
+                        tempApp.procList = new List<Process>();
+                        tempApp.PIDNum = appIndex;
+                        appIndex++;     //Increment number of applications
+
+                        //ourAppList.Add
+                        lastOp = 'A';
+                    }
                 }
+
                 if (currentLine[0] == 'P' || currentLine[1] == 'P') //Handling Process Operation
                 {
-                    Console.Write('P');
+                    //Console.Write('P');
+                    int len = currentLine.Length;
+                    tempInt = 0;
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (currentLine[i] == ')' && (i + 2) < len)
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48) * 10;
+                            tempInt += (int)(currentLine[i + 2] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        else if (currentLine[i] == ')')
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        tempProc.initCT = tempInt;
+                        tempProc.remCT = tempInt;
+                        tempProc.ioList = new List<IO>();
+                        //USE TEMPINT TO STORE INITCT FOR PROCESSES AND IO
+                    }
+                    lastOp = 'P';
                 }
-                if (currentLine[0] == 'I' || currentLine[1] == 'I') //Handling 
+
+                if (currentLine[0] == 'I' || currentLine[1] == 'I') //Handling Input Operation
                 {
-                    Console.Write('I');
+                    //Console.Write('I');
+                    int len = currentLine.Length;
+                    tempInt = 0;
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (currentLine[i] == ')' && (i + 2) < len)
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48) * 10;
+                            tempInt += (int)(currentLine[i + 2] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        else if (currentLine[i] == ')')
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        //USE TEMPINT TO STORE INITCT FOR PROCESSES AND IO
+                    }
+                    lastOp = 'I';
                 }
-                if (currentLine[0] == 'O' || currentLine[1] == 'O')
+
+                if (currentLine[0] == 'O' || currentLine[1] == 'O') //Handling Output Operation
                 {
-                    Console.Write('O');
+                    //Console.Write('O');
+                    int len = currentLine.Length;
+                    tempInt = 0;
+                    for (int i = 0; i < len; i++)
+                    {
+                        if (currentLine[i] == ')' && (i + 2) < len)
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48) * 10;
+                            tempInt += (int)(currentLine[i + 2] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        else if (currentLine[i] == ')')
+                        {
+                            tempInt = (int)(currentLine[i + 1] - 48);
+                            //Console.WriteLine(tempInt);
+                        }
+                        //USE TEMPINT TO STORE INITCT FOR PROCESSES AND IO
+                    }
+                    lastOp = 'O';
                 }
             }
 
