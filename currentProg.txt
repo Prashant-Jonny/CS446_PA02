@@ -35,8 +35,14 @@ namespace ConsoleApplication2
     {
         static void Main(string[] args)
         {
-            List<string> ourData = new List<string>();
-            string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");
+            //Declare all variables
+            List<string> ourData = new List<string>();  //Temporary list to hold all meta data
+            char lastOp = 'S';                          //Stores a value of last operation
+            int appIndex = 0, procIndex = 0;            //Application and process index variables
+            //string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");//Used on cpe lab comp
+            string dataFile = "S(start)0; A(start)0; P(run)13; I(keyboard)5; P(run)6; O(monitor)5; P(run)5; I(hard drive)5; P(run)7; A(end)0; A(start)0; P(run)10; I(keyboard)5; P(run)7; O(hard drive)5; P(run)15; A(end)0; A(start)0; P(run)13; I(hard drive)5; P(run)14; O(hard drive)5; P(run)13; I(hard drive)5; P(run)10; S(end)0.";
+            //ABOVE IS AN EXAMPLE^ WE WILL FIX LATER
+            //Prime the data read in loop-------------------------
             string x = dataFile;
             int index1 = 0, index2 = x.IndexOf(';');
             while( index2 != -1)
@@ -48,11 +54,42 @@ namespace ConsoleApplication2
                 index1 = index2+1;
                 index2 = x.IndexOf(';', index2+1);
             }
-            //Console.WriteLine(x.Substring(index1));//Debugging
+            string temp2 = x.Substring(index1);
+            ourData.Add(temp2);//Adds the final System End
+            //End of data read in loop (to a list of strings)-----
+
+            //Begin to store data in proper 
             foreach (string currentLine in ourData)
             {
-                Console.WriteLine(currentLine);
+                //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
+                if (currentLine[0] == 'S' || currentLine[1] == 'S') //Handling System Operation
+                {
+                    //Console.Write('S');
+                    lastOp = 'S';
+                }
+                if (currentLine[0] == 'A' || currentLine[1] == 'A') //Handling Application Operation
+                {
+                    //Console.Write('A');
+                    lastOp = 'A';
+                }
+                if (currentLine[0] == 'P' || currentLine[1] == 'P') //Handling Process Operation
+                {
+                    //Console.Write('P');
+                    lastOp = 'P';
+                }
+                if (currentLine[0] == 'I' || currentLine[1] == 'I') //Handling Input Operation
+                {
+                    //Console.Write('I');
+                    lastOp = 'I';
+                }
+                if (currentLine[0] == 'O' || currentLine[1] == 'O') //Handling Output Operation
+                {
+                    //Console.Write('O');
+                    lastOp = 'O';
+                }
             }
+
+            //Start main program
             Console.ReadKey();
 
         }
