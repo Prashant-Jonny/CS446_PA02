@@ -1,0 +1,60 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.IO;
+
+namespace ConsoleApplication2
+{
+    class IO
+    {
+        int initCT;
+        int remCT;
+        int beginTime;
+        int endTime;
+        char type;
+        string descriptor;
+    }
+    class Process
+    {
+        int initCT;
+        int remCT;
+        List<IO> ioList = new List<IO>();
+        bool finished;
+    }
+    class Application
+    {
+        public int PIDNum;
+        public int numProc;
+        public int procRem;
+        public List<Process> ioList = new List<Process>();
+        public bool finished;
+    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            List<string> ourData = new List<string>();
+            string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");
+            string x = dataFile;
+            int index1 = 0, index2 = x.IndexOf(';');
+            while( index2 != -1)
+            {
+                int q = index2 - index1;
+                //Console.WriteLine(x.Substring(index1, q));//Debugging
+                string temp = x.Substring(index1, q);
+                ourData.Add(temp);
+                index1 = index2+1;
+                index2 = x.IndexOf(';', index2+1);
+            }
+            //Console.WriteLine(x.Substring(index1));//Debugging
+            foreach (string currentLine in ourData)
+            {
+                Console.WriteLine(currentLine);
+            }
+            Console.ReadKey();
+
+        }
+    }
+}
