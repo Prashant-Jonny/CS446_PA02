@@ -350,6 +350,24 @@ namespace simulator
             }
          }
 
+         if (GlobalVariable.scheduler == "SJF")
+         {
+             // for each application, the list of processes will be sorted from least to greatest based on remCT
+         }
+
+         else if (GlobalVariable.scheduler == "SRJN")
+         {
+             // for each application, the list of processes will be sorted from least to greatest based on remCT
+         }
+
+         bool allAppsFinished = false;
+         int currentApp;
+
+         //Start main program
+         while (allAppsFinished != true)
+         {
+
+         }
          //Start main program
          Console.ReadKey();
 
