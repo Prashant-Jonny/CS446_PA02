@@ -32,6 +32,16 @@ namespace simulator
       public int procRem;
       public List<Process> procList = new List<Process>();
       public bool finished = false;
+
+      public void sortSJF()
+      {
+         this.procList = procList.OrderBy(o=>o.initCT).ToList();
+      }
+
+      public void sortSRTF()
+      {
+         this.procList = procList.OrderBy(o => o.remCT).ToList();
+      }
    }
 
    // Process Class
@@ -243,7 +253,6 @@ namespace simulator
          temp2 = temp2.Trim();
          ourData.Add(temp2);//Adds the final System End
 
-
          //Begin to store data in proper structures (ourAppList)
          foreach (string currentLine in ourData)
          {
@@ -401,7 +410,8 @@ namespace simulator
             // for each application, the list of processes will be sorted from least to greatest based on remCT
          }
 
-         else if (GlobalVariable.scheduler == "SRJN")
+
+         else if (GlobalVariable.scheduler == "SRTF")
          {
             // for each application, the list of processes will be sorted from least to greatest based on remCT
          }
@@ -414,7 +424,6 @@ namespace simulator
          {
 
          }
-    
 
          Console.ReadKey();
          Environment.Exit(0);
