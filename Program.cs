@@ -7,6 +7,7 @@ using System.IO;
 
 namespace simulator
 {
+<<<<<<< HEAD
     // Global Variables
     public static class GlobalVariable
     {
@@ -67,6 +68,79 @@ namespace simulator
             int len = s.Length;
             int tempInt = 0;
             for (int i = 0; i < len; i++)
+=======
+   // Global Variables
+   public static class GlobalVariable
+   {
+      public static string version;
+      public static int quantum;
+      public static string scheduler;
+      public static string filePath;
+      public static int procTime;
+      public static int monitorTime;
+      public static int hdTime;
+      public static int printerTime;
+      public static int kbTime;
+      public static string memType;
+      public static string log;
+      public static int clockTime;
+   }
+
+   // Application Class
+   class Application
+   {
+      public int PIDNum;
+      public int numProc;
+      public int procRem;
+      public List<Process> procList = new List<Process>();
+      public bool finished = false;
+
+      public void sortSJF()
+      {
+         this.procList = procList.OrderBy(o=>o.initCT).ToList();
+      }
+
+      public void sortSRTF()
+      {
+         this.procList = procList.OrderBy(o => o.remCT).ToList();
+      }
+   }
+
+   // Process Class
+   class Process
+   {
+      public int initCT;
+      public int remCT;
+      public List<IO> ioList = new List<IO>();
+      public bool finished = false;
+   }
+
+   // IO Class
+   class IO
+   {
+      public int initCT;
+      public int remCT;
+      public int beginTime;
+      public int endTime;
+      public char type;
+      public string descriptor;
+   }
+
+   // Main Program
+   class Program
+   {
+      /*-----------
+        Functions
+       ----------*/ 
+
+      static int findCycleTime(string s)      //Determines cycle time in our meta-data string
+      {
+         int len = s.Length;
+         int tempInt = 0;
+         for (int i = 0; i < len; i++)
+         {
+            if (s[i] == ')' && (i + 2) < len)
+>>>>>>> origin/master
             {
                 if (s[i] == ')' && (i + 2) < len)
                 {
@@ -252,6 +326,7 @@ namespace simulator
                 index1 = index2 + 1;
                 index2 = x.IndexOf(';', index2 + 1);
             }
+<<<<<<< HEAD
             string temp2 = x.Substring(index1);
             temp2 = temp2.Trim();
             ourData.Add(temp2);//Adds the final System End
@@ -259,6 +334,35 @@ namespace simulator
 
             //Begin to store data in proper structures (ourAppList)
             foreach (string currentLine in ourData)
+=======
+         }
+
+         /*----------------------------------------------------
+           Read in the meta-data to their respectable classes
+         ----------------------------------------------------*/ 
+
+         string x = dataFile;
+         int index1 = 0, index2 = x.IndexOf(';');
+         while (index2 != -1)
+         {
+            int q = index2 - index1;
+            //Console.WriteLine(x.Substring(index1, q));//Debugging
+            string temp = x.Substring(index1, q);
+            temp = temp.Trim();
+            ourData.Add(temp);
+            index1 = index2 + 1;
+            index2 = x.IndexOf(';', index2 + 1);
+         }
+         string temp2 = x.Substring(index1);
+         temp2 = temp2.Trim();
+         ourData.Add(temp2);//Adds the final System End
+
+         //Begin to store data in proper structures (ourAppList)
+         foreach (string currentLine in ourData)
+         {
+            //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
+            switch (currentLine[0])
+>>>>>>> origin/master
             {
                 //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
                 switch (currentLine[0])
@@ -415,10 +519,23 @@ namespace simulator
                 // for each application, the list of processes will be sorted from least to greatest based on remCT
             }
 
+<<<<<<< HEAD
             else if (GlobalVariable.scheduler == "SRJN")
             {
                 // for each application, the list of processes will be sorted from least to greatest based on remCT
             }
+=======
+         if (GlobalVariable.scheduler == "SJF")
+         {
+            // for each application, the list of processes will be sorted from least to greatest based on remCT
+         }
+
+
+         else if (GlobalVariable.scheduler == "SRTF")
+         {
+            // for each application, the list of processes will be sorted from least to greatest based on remCT
+         }
+>>>>>>> origin/master
 
             else if (GlobalVariable.scheduler == "FIFO")
             {
@@ -456,7 +573,11 @@ namespace simulator
                     //Test if interupt Queue is empty
                 }
 
+<<<<<<< HEAD
             }
+=======
+         }
+>>>>>>> origin/master
 
             Console.ReadKey();
             Environment.Exit(0);
