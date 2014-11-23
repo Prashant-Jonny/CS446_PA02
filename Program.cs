@@ -43,7 +43,7 @@ namespace simulator
       public bool finished = false;
    }
 
-   // I/O Class
+   // IO Class
    class IO
    {
       public int initCT;
@@ -57,8 +57,11 @@ namespace simulator
    // Main Program
    class Program
    {
-      //Functions
-      static int FindCycleTime(string s)      //Determines cycle time in our meta-data string
+      /*-----------
+        Functions
+       ----------*/ 
+
+      static int findCycleTime(string s)      //Determines cycle time in our meta-data string
       {
          int len = s.Length;
          int tempInt = 0;
@@ -77,7 +80,7 @@ namespace simulator
          return tempInt;
       }
 
-      static string FindDescriptor(string s) //Determines string value between ()'s in meta-data string
+      static string findDescriptor(string s) //Determines string value between ()'s in meta-data string
       {
          int len = s.Length, x = 0;
          string tempString = null;
@@ -93,7 +96,7 @@ namespace simulator
                }
             }
          }
-         return tempString;//Return the value (ie "monitor" or "keyboard"
+         return tempString;//Return the value (i.e. "monitor" or "keyboard")
       }
 
       static void copyProcess(Process src, Process dest)
@@ -110,6 +113,7 @@ namespace simulator
             dest.ioList.Add(newIO);
          }
       }
+
       static void copyApplication(Application src, Application dest)
       {
          dest.PIDNum = src.PIDNum;
@@ -125,39 +129,43 @@ namespace simulator
 
       static void Main(string[] args)
       {
-         /*------------
+         /*-----------
            Variables 
-         ------------*/
-         char lastOp = 'S';                                       // Stores the value of last operation
-         string configFile, configPath, fullPath;                  
+         -----------*/
+
+         string configFile, configPath;                 
          bool appStarted = false, procStarted = false;
          int appIndex = 0, procIndex = 0, tempInt = 0;            // Application and process index variables
          List<string> ourData = new List<string>();               // Temporary list to hold all meta data
          List<Application> ourAppList = new List<Application>();  // Our application list
 
+         Application tempApp = new Application();
+         Process tempProc = new Process();
+
          //string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");//Used on cpe lab comp
          string dataFile = "S(start)0; A(start)0; P(run)13; I(keyboard)5; P(run)6; O(monitor)5; P(run)5; I(hard drive)5; P(run)7; A(end)0; A(start)0; P(run)10; I(keyboard)5; P(run)7; O(hard drive)5; P(run)15; A(end)0; A(start)0; P(run)13; I(hard drive)5; P(run)14; O(hard drive)5; P(run)13; I(hard drive)5; P(run)10; S(end)0.";
          //ABOVE IS AN EXAMPLE^ WE WILL FIX LATER
 
-         /*------------------------------------------------------------
+         /*-----------------------------------------------------------
            Read in the configuration file from command-line argument 
-         ------------------------------------------------------------*/
+         -----------------------------------------------------------*/
 
-         // Checks if user had input an argument, if not exit the program
+         // Checks if user had input an argument, if not, exit the program
          if (args.Length == 0)
          {
             Console.WriteLine("Error: Please enter the name of the configuration file. \nPress a key to exit.");
             Console.ReadKey();
             Environment.Exit(1);
          }
+
          // If there is a valid argument, start reading in data
          else
          {
             // Get the configuration file name
             configFile = args[0];
-            configPath = Directory.GetCurrentDirectory();  // This is the current directory of the running program for our purposes, 
-            // PUT FILES HERE, MIGHT CHANGE LATER
-            //Console.WriteLine(configPath);                 // TEST
+            configPath = Directory.GetCurrentDirectory();   // This is the current directory of the running program for our purposes, 
+                                                            // PUT FILES HERE, MIGHT CHANGE LATER
+            //Console.WriteLine(configPath);                // TEST
             //Console.WriteLine(configFile);
             // Read in all the lines to an array, prints an error if an exception is caught
             try
@@ -172,7 +180,7 @@ namespace simulator
                   {
                      lines[index] = lines[index].Split(':')[1];
                      // Gets rid of white-space
-                     lines[index] = lines[index].TrimStart();
+                     lines[index] = lines[index].Trim();
 
                      //Console.WriteLine(lines[index]);
 
@@ -203,8 +211,7 @@ namespace simulator
                Console.WriteLine(GlobalVariable.printerTime);
                Console.WriteLine(GlobalVariable.kbTime);
                Console.WriteLine(GlobalVariable.memType);
-               Console.WriteLine(GlobalVariable.log);
-               */
+               Console.WriteLine(GlobalVariable.log); */
 
             }
 
@@ -216,7 +223,10 @@ namespace simulator
             }
          }
 
-         //Prime the data read in loop-------------------------
+         /*----------------------------------------------------
+           Read in the meta-data to their respectable classes
+         ----------------------------------------------------*/ 
+
          string x = dataFile;
          int index1 = 0, index2 = x.IndexOf(';');
          while (index2 != -1)
@@ -224,112 +234,148 @@ namespace simulator
             int q = index2 - index1;
             //Console.WriteLine(x.Substring(index1, q));//Debugging
             string temp = x.Substring(index1, q);
-            temp = temp.TrimStart();
+            temp = temp.Trim();
             ourData.Add(temp);
             index1 = index2 + 1;
             index2 = x.IndexOf(';', index2 + 1);
          }
          string temp2 = x.Substring(index1);
-         temp2 = temp2.TrimStart();
+         temp2 = temp2.Trim();
          ourData.Add(temp2);//Adds the final System End
-         //End of data read in loop (to a list of strings)-----
 
-         Application tempApp = new Application();
-         Process tempProc = new Process();
-         //IO tempIO = new IO();
 
          //Begin to store data in proper structures (ourAppList)
          foreach (string currentLine in ourData)
          {
-            IO tempIO = new IO();
-            Process tempProc2 = new Process();
-            Application tempApp2 = new Application();
             //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
-            if (currentLine[0] == 'S' || currentLine[1] == 'S') //Handling System Operation
+            switch (currentLine[0])
             {
-               if (procStarted)
-               {
-                  copyProcess(tempProc, tempProc2);
-                  tempApp.procList.Add(tempProc2);
-                  procStarted = false;
-               }
-               if (appStarted)
-               {
-                  tempInt = tempApp.procList.Count;
-                  tempApp.numProc = tempInt;
-                  tempApp.procRem = tempInt;
-                  copyApplication(tempApp, tempApp2);
-                  ourAppList.Add(tempApp2);
-                  appStarted = false;
-               }
-            }
-
-            if (currentLine[0] == 'A' || currentLine[1] == 'A') //Handling Application Operation
-            {
-               if (FindDescriptor(currentLine) == "end")         //If this is the end of an application, store values into list
-               {
-                  if (procStarted)
+               // Operating System Operations, Start & End
+               case 'S':
                   {
-                     copyProcess(tempProc, tempProc2);
-                     tempApp.procList.Add(tempProc2);
-                     procStarted = false;
+                     if (findDescriptor(currentLine) == "start")
+                     {
+                        Console.WriteLine("SYSTEM - Boot, set up (Need to calculate time, somehow)");
+                     }
+
+                     // If this is the end of the meta-data, make sure everything has been added in
+                     else
+                     {
+                        if (procStarted)
+                        {
+                           Process tempProc2 = new Process();
+                           copyProcess(tempProc, tempProc2);
+                           tempApp.procList.Add(tempProc2);
+                           procStarted = false;
+                        }
+
+                        if (appStarted)
+                        {
+                           Application tempApp2 = new Application();
+                           tempInt = tempApp.procList.Count;
+                           tempApp.numProc = tempInt;
+                           tempApp.procRem = tempInt;
+                           copyApplication(tempApp, tempApp2);
+                           ourAppList.Add(tempApp2);
+                           appStarted = false;
+                        }
+                     }
+                     break;
                   }
-                  tempInt = tempApp.procList.Count;
-                  tempApp.numProc = tempInt;
-                  tempApp.procRem = tempInt;
-                  copyApplication(tempApp, tempApp2);
-                  ourAppList.Add(tempApp2);
-                  appStarted = false;
-               }
-               if (FindDescriptor(currentLine) == "start")         //If start of an app. begin setting data for it
-               {
-                  appStarted = true;
-                  tempApp.procList = new List<Process>();
-                  tempApp.PIDNum = appIndex;
-                  appIndex++;     //Increment number of applications
-               }
-            }
 
-            if (currentLine[0] == 'P' || currentLine[1] == 'P') //Handling Process Operation
-            {
-               if (procStarted)
-               {
-                  copyProcess(tempProc, tempProc2);
-                  tempApp.procList.Add(tempProc2);
-                  procStarted = false;
-               }
-               if (procStarted == false)
-               {
-                  tempInt = FindCycleTime(currentLine);
-                  tempProc.initCT = tempInt;
-                  tempProc.remCT = tempInt;
-                  tempProc.ioList = new List<IO>();
-                  procStarted = true;
-               }
-            }
+               // Program Application Operations, Start & End
+               case 'A':
+                  {
+                     if (findDescriptor(currentLine) == "start")
+                     {
+                        appStarted = true;
+                        tempApp.procList.Clear();
+                        appIndex++;                                        // Increment number of applications
+                        tempApp.PIDNum = appIndex;
+                        Console.WriteLine("PID " + appIndex + " - Enter system");
+                        Console.WriteLine("SYSTEM - Creating PID " + appIndex + " (TIME)");
+                     }
 
-            if (currentLine[0] == 'I' || currentLine[1] == 'I') //Handling Input Operation
-            {
-               tempInt = FindCycleTime(currentLine);
-               tempIO.initCT = tempInt;
-               tempIO.remCT = tempInt;
-               tempIO.type = 'I';
-               tempIO.descriptor = FindDescriptor(currentLine);
-               tempProc.ioList.Add(tempIO);        //Add to the last current running process
-            }
+                     // If this is the end of an application, store values into list
+                     else                                                  
+                     {
+                        Application tempApp2 = new Application();
+                        Process tempProc2 = new Process();
+                        if (procStarted)
+                        {
+                           copyProcess(tempProc, tempProc2);
+                           tempApp.procList.Add(tempProc2);
+                           procStarted = false;
+                        }
+                        tempInt = tempApp.procList.Count;
+                        tempApp.numProc = tempInt;
+                        tempApp.procRem = tempInt;
+                        copyApplication(tempApp, tempApp2);
+                        ourAppList.Add(tempApp2);
+                        appStarted = false;
+                     }
+                     break;
+                  }
 
-            if (currentLine[0] == 'O' || currentLine[1] == 'O') //Handling Output Operation
-            {
-               tempInt = FindCycleTime(currentLine);
-               tempIO.initCT = tempInt;
-               tempIO.remCT = tempInt;
-               tempIO.type = 'O';
-               tempIO.descriptor = FindDescriptor(currentLine);
-               tempProc.ioList.Add(tempIO);        //Add to the last current running process
+               // Process Operations, Run
+               case 'P':
+                  {
+                     // Copy
+                     if (procStarted)
+                     {
+                        Process tempProc2 = new Process();
+                        copyProcess(tempProc, tempProc2);
+                        tempApp.procList.Add(tempProc2);
+                        procStarted = false;
+                     }
+
+                     if (procStarted == false)
+                     {
+                        tempInt = findCycleTime(currentLine);
+                        tempProc.initCT = tempInt;
+                        tempProc.remCT = tempInt;
+                        tempProc.ioList.Clear();
+                        procStarted = true;
+                     }
+                     break;
+                  }
+
+               // Input Operations, Hard Drive & Keyboard
+               case 'I':
+                  {
+                     IO tempIO = new IO();
+                     tempInt = findCycleTime(currentLine);
+                     tempIO.initCT = tempInt;
+                     tempIO.remCT = tempInt;
+                     tempIO.type = 'I';
+                     tempIO.descriptor = findDescriptor(currentLine);
+                     tempProc.ioList.Add(tempIO);        //Add to the last current running process
+                     break;
+                  }
+
+               // Output Operations, Hard Drive & Monitor
+               case 'O':
+                  {
+                     IO tempIO = new IO();
+                     tempInt = findCycleTime(currentLine);
+                     tempIO.initCT = tempInt;
+                     tempIO.remCT = tempInt;
+                     tempIO.type = 'O';
+                     tempIO.descriptor = findDescriptor(currentLine);
+                     tempProc.ioList.Add(tempIO);        //Add to the last current running process
+                     break;
+                  }
+
+               default:
+                  { 
+                     Console.WriteLine("Error: Problems occured reading the meta-data. \nPress a key to exit.");
+                     Console.ReadKey();
+                     Environment.Exit(1);
+                     break;
+                  }
             }
          }
-         
-    
+
          // Check if all data was read in correctly
          foreach (Application a in ourAppList)
          {
@@ -352,12 +398,12 @@ namespace simulator
 
          if (GlobalVariable.scheduler == "SJF")
          {
-             // for each application, the list of processes will be sorted from least to greatest based on remCT
+            // for each application, the list of processes will be sorted from least to greatest based on remCT
          }
 
          else if (GlobalVariable.scheduler == "SRJN")
          {
-             // for each application, the list of processes will be sorted from least to greatest based on remCT
+            // for each application, the list of processes will be sorted from least to greatest based on remCT
          }
 
          bool allAppsFinished = false;
@@ -368,8 +414,10 @@ namespace simulator
          {
 
          }
-         //Start main program
+    
+
          Console.ReadKey();
+         Environment.Exit(0);
 
       }
    }
