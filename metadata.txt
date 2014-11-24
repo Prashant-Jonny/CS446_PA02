@@ -1,4 +1,4 @@
 Program Meta-Data Code:
 
-S(start)0; A(start)0; P(run)7; I(hard drive)15; P(run)15; A(end)0; A(start)0; 
-P(run)14; O(monitor)6; A(end)0; S(end)0.
+S(start)0; A(start)0; P(run)7; I(hard drive)15; O(monitor)3; P(run)15; A(end)0; A(start)0; 
+P(run)14; O(monitor)6; P(run)14; O(monitor)6; A(end)0; S(end)0.
