@@ -29,8 +29,6 @@ S(end)0.";
 
 COPY BELOW THIS AND PASTE TO YOUR VISUAL STUDIO  VVV
 
-
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,6 +64,10 @@ namespace simulator
         public int currProcIndex = 0;
         public List<Process> procList = new List<Process>();
         public bool finished = false;
+        public void sortSJF()
+        {
+            this.procList = procList.OrderBy(o => o.initCT).ToList();
+        }
     }
 
     // Process Class
@@ -545,8 +547,16 @@ namespace simulator
                 }
             }
 
-            else if( GlobalVariable.scheduler == "FIFO")
+            else if (GlobalVariable.scheduler == "FIFO" || GlobalVariable.scheduler == "SJF")
             {
+                if (GlobalVariable.scheduler == "SJF")
+                {
+                    //Sort all processes 
+                    for( int w = 0 ; w < ourAppList.Count ; w++ )
+                    {
+                        ourAppList[w].sortSJF();
+                    }
+                }
                 //Run the program in first in first out order
                 while( appQueue.Count != 0 )        //While the queue is NOT empty we still need 
                 {
