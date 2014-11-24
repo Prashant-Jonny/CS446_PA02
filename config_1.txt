@@ -1,7 +1,7 @@
 Start Simulator Configuration File
 Version: 1.0
 Quantum (cycles): 3
-Processor Scheduling: FIFO
+Processor Scheduling: RR
 File Path: C:\Users\Jennifer\Documents\Visual Studio 2013\Projects\ConsoleApplication1\ConsoleApplication1\bin\Debug
 Processor cycle time (msec): 10
 Monitor display time (msec): 25

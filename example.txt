@@ -29,6 +29,8 @@ S(end)0.";
 
 COPY BELOW THIS AND PASTE TO YOUR VISUAL STUDIO  VVV
 
+
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -468,14 +470,79 @@ namespace simulator
                 }
             }*/
 
-            if (GlobalVariable.scheduler == "SJF")
+            if (GlobalVariable.scheduler == "RR")
             {
-                // for each application, the list of processes will be sorted from least to greatest based on remCT
-            }
-
-            else if (GlobalVariable.scheduler == "SRJN")
-            {
-                // for each application, the list of processes will be sorted from least to greatest based on remCT
+                //Run the program in first in first out order
+                while (appQueue.Count != 0)        //While the queue is NOT empty we still need 
+                {
+                    Thread.Sleep(1);    //test for interupt (1millisecond)
+                    int currAppIndex = appQueue.Dequeue();
+                    int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);//Returns -1 if complete
+                    int currIOIndex = -1;
+                    if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)
+                    {
+                        //Handle IO Here
+                        Thread.Sleep(1);    //test for interupt (1millisecond)
+                        currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);  //Find next IO to handle
+                        ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].hasStarted = true;
+                        ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].beginTime = GlobalVariable.clockTime;
+                        ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].endTime = (GlobalVariable.clockTime + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].initCT);
+                        Thread.Sleep(1);    //test for interupt (1millisecond)
+                        Console.WriteLine("SYSTEM – Managing I/O  <" + GlobalVariable.clockTime + '>');
+                        Console.WriteLine("PID " + (currAppIndex + 1) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started.");
+                        Thread.Sleep(1000);    //test for interupt (1millisecond)
+                        Thread thread = new Thread(() => startThread(ourAppList[currAppIndex], ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex])); ;
+                        thread.Start();
+                        Thread.Sleep(1000);    //test for interupt (1second)
+                        currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);
+                        if (currIOIndex == -1)
+                        {
+                            ourAppList[currAppIndex].procList[currProcIndex].finished = true;
+                        }
+                    }
+                    else
+                    {
+                        int cyclesRan = 0;
+                        for (int q = 0; q < GlobalVariable.quantum; q++)
+                        {
+                            
+                            if( ourAppList[currAppIndex].procList[currProcIndex].remCT > 0)
+                            {
+                                //Decrease remCT and increment the clock variable
+                                Thread.Sleep(1);    //test for interupt (1millisecond)
+                                ourAppList[currAppIndex].procList[currProcIndex].remCT--;
+                                GlobalVariable.clockTime++;
+                                cyclesRan++;
+                            }
+                        }
+                        int procTime = cyclesRan * GlobalVariable.procTime;
+                        Console.WriteLine("PID " + (currAppIndex + 1) + " - Processing (" + procTime + ") <" + GlobalVariable.clockTime + '>');
+                        if( ourAppList[currAppIndex].procList[currProcIndex].remCT == 0 )//if proc rem ct = 0
+                        {
+                            if (ourAppList[currAppIndex].procList[currProcIndex].ioList.Count == 0)//test if no io (to set finished)
+                            {
+                                ourAppList[currAppIndex].procList[currProcIndex].finished = true; //If the process has no corresponding IO its finished
+                            }
+                        }
+                    }
+                    //Once a process is finished check if entire app is finished
+                    currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);
+                    if (currProcIndex != -1)
+                    {
+                        //If app is not finished enqueue it back to our appQueue
+                        appQueue.Enqueue(currAppIndex);
+                    }//If currProcIndex does = -1, the app is finished
+                    else
+                    {
+                        Thread.Sleep(1);    //test for interupt (1millisecond)
+                        Console.WriteLine("PID " + (currAppIndex + 1) + " – Exit system");
+                        Console.WriteLine("SYSTEM – Ending process <" + GlobalVariable.clockTime + '>');
+                    }
+                    if (appQueue.Count > 0)
+                    {
+                        Console.WriteLine("SYSTEM – Swapping processes <" + GlobalVariable.clockTime + '>');
+                    }
+                }
             }
 
             else if( GlobalVariable.scheduler == "FIFO")
@@ -536,6 +603,10 @@ namespace simulator
                         Thread.Sleep(1);    //test for interupt (1millisecond)
                         Console.WriteLine("PID " + (currAppIndex+1) + " – Exit system");
                         Console.WriteLine("SYSTEM – Ending process <" + GlobalVariable.clockTime + '>');
+                    }
+                    if (appQueue.Count > 0)
+                    {
+                        Console.WriteLine("SYSTEM – Swapping processes <" + GlobalVariable.clockTime + '>');
                     }
                 }
 
