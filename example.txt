@@ -1,34 +1,3 @@
-S(start)0; 
-	A(start)0; 
-		P(run)13; 
-			I(keyboard)5; 
-		P(run)6; 
-			O(monitor)5; 
-		P(run)5; 
-			I(hard drive)5; 
-		P(run)7; 
-	A(end)0; 
-
-	A(start)0; 
-		P(run)10; 
-			I(keyboard)5; 
-		P(run)7; 
-			O(hard drive)5; 
-		P(run)15; 
-	A(end)0;
-
-	A(start)0; 
-		P(run)13; 
-			I(hard drive)5; 
-		P(run)14; 
-			O(hard drive)5; 
-		P(run)13; 
-			I(hard drive)5; 
-		P(run)10; 
-S(end)0.";
-
-COPY BELOW THIS AND PASTE TO YOUR VISUAL STUDIO  VVV
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,6 +22,7 @@ namespace simulator
         public static string memType;
         public static string log;
         public static int clockTime = 0;
+        public static bool threadRunning = false;
     }
 
     // Application Class
@@ -99,6 +69,7 @@ namespace simulator
          ----------*/
         static void startThread(Application threadedApp, IO threadedIO)
         {
+            GlobalVariable.threadRunning = true; 
             while (GlobalVariable.clockTime < threadedIO.endTime)
             {
                 //Wait for clock to be past endtime
@@ -106,8 +77,8 @@ namespace simulator
             //The IO Operation has finished, so set remCT to 0
             threadedIO.remCT = 0;
             //Display message that notifies it finished
-            Console.WriteLine("PID " + threadedApp.PIDNum + " – " + threadedIO.type + " , " + threadedIO.descriptor + " completed <" + GlobalVariable.clockTime + '>');
-
+            Console.WriteLine("PID " + threadedApp.PIDNum + " – " + threadedIO.type + ", " + threadedIO.descriptor + " completed <" + GlobalVariable.clockTime + '>');
+            GlobalVariable.threadRunning = false;
         }
         static int findCycleTime(string s)      //Determines cycle time in our meta-data string
         {
@@ -301,7 +272,7 @@ namespace simulator
             /*----------------------------------------------------
               Read in the meta-data to their respectable classes
             ----------------------------------------------------*/
-            FileStream fileStream = File.OpenRead("C://Users/Eddie/Desktop/simulator/metadata.txt");
+            FileStream fileStream = File.OpenRead("C://Users/Broncosboi/Desktop/metadata.txt");
             TextReader textReader = new StreamReader(fileStream);
 
             string dummy = textReader.ReadLine();
@@ -547,7 +518,11 @@ namespace simulator
                     }//If currProcIndex does = -1, the app is finished
                     else
                     {
-                        Thread.Sleep(1);    //test for interupt (1millisecond)
+                        while(GlobalVariable.threadRunning && appQueue.Count == 0)
+                        {
+                            GlobalVariable.clockTime++;
+                            Thread.Sleep(1);
+                        }
                         Console.WriteLine("PID " + (currAppIndex + 1) + " – Exit system");
                         Console.WriteLine("SYSTEM – Ending process <" + GlobalVariable.clockTime + '>');
                     }
@@ -621,7 +596,11 @@ namespace simulator
                     }//If currProcIndex does = -1, the app is finished
                     else
                     {
-                        Thread.Sleep(1);    //test for interupt (1millisecond)
+                        while (GlobalVariable.threadRunning && appQueue.Count == 0)
+                        {
+                            GlobalVariable.clockTime++;
+                            Thread.Sleep(1);
+                        }
                         Console.WriteLine("PID " + (currAppIndex + 1) + " – Exit system");
                         Console.WriteLine("SYSTEM – Ending process <" + GlobalVariable.clockTime + '>');
                     }
