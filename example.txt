@@ -304,6 +304,9 @@ namespace simulator
             FileStream fileStream = File.OpenRead("C://Users/Eddie/Desktop/simulator/metadata.txt");
             TextReader textReader = new StreamReader(fileStream);
 
+            string dummy = textReader.ReadLine();
+            dummy = textReader.ReadLine();
+
             string whatWasReadIn = textReader.ReadToEnd();
             //Console.Write(whatWasReadIn); //Debugging Purposes
 
