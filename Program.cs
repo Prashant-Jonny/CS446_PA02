@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +24,7 @@ namespace simulator
       public static int kbTime;
       public static string memType;
       public static string log;
-      
+
       // Clock related variables
       public static int clockTime;
 
@@ -48,7 +48,7 @@ namespace simulator
       // Sorts the application processes based on the shortest job first
       public void sortSJF()
       {
-         this.procList = procList.OrderBy(o=>o.initCT).ToList();
+         this.procList = procList.OrderBy(o => o.initCT).ToList();
       }
    }
 
@@ -183,7 +183,7 @@ namespace simulator
          return -1;
       }
 
-      static long calcMicroSec( long ticks )                            // Converts to from ticks to microseconds
+      static long calcMicroSec(long ticks)                            // Converts to from ticks to microseconds
       {
          long microSec;
 
@@ -194,27 +194,6 @@ namespace simulator
 
       static void startThread(Application threadedApp, IO threadedIO)   // The function a thread runs when IO operation has started
       {
-         int procTime = 0;
-
-         switch (threadedIO.descriptor)
-         {
-            case "monitor":
-               procTime = threadedIO.initCT * GlobalVariable.monitorTime;
-               break;
-
-            case "hard drive":
-               procTime = threadedIO.initCT * GlobalVariable.hdTime;
-               break;
-
-            case "printer":
-               procTime = threadedIO.initCT * GlobalVariable.printerTime;
-               break;
-
-            case "keyboard":
-               procTime = threadedIO.initCT * GlobalVariable.kbTime;
-               break;        
-         }
-
          GlobalVariable.threadRunning = true;
 
          while (GlobalVariable.clockTime < threadedIO.endTime)
@@ -225,8 +204,7 @@ namespace simulator
          //The IO Operation has finished, so set remCT to 0
          threadedIO.remCT = 0;
          //Display message that notifies it finished
-
-         log("PID " + threadedApp.PIDNum + " – " + threadedIO.type + ", " + threadedIO.descriptor + " completed (" + procTime + " mSec)");
+         log("PID " + threadedApp.PIDNum + " – " + threadedIO.type + ", " + threadedIO.descriptor + " completed (" + (GlobalVariable.kbTime * threadedIO.initCT) + "msec)");
          GlobalVariable.threadRunning = false;
       }
 
@@ -292,7 +270,7 @@ namespace simulator
 
                for (index = 0; index < lines.Length; index++)
                {
-                  if( index == 4 )     // If it's file path, only get the string characters past the first colon
+                  if (index == 4)     // If it's file path, only get the string characters past the first colon
                   {
                      lines[index] = lines[index].Substring(11);
                      index++;
@@ -319,7 +297,7 @@ namespace simulator
                GlobalVariable.log = lines[11];
 
                // Determine if configuration file had a valid scheduling algorithm, else print an error
-               if( GlobalVariable.scheduler != "FIFO" && GlobalVariable.scheduler != "RR" && GlobalVariable.scheduler != "SJF" )
+               if (GlobalVariable.scheduler != "FIFO" && GlobalVariable.scheduler != "RR" && GlobalVariable.scheduler != "SJF")
                {
                   Console.WriteLine("Error: The scheduling type in the configuration file is not supported. \nTry again using FIFO, RR, or SJF. \nPress a key to exit.");
                   Console.ReadKey();
@@ -339,28 +317,26 @@ namespace simulator
            Read in the meta-data to their respectable classes
          ----------------------------------------------------*/
 
-         // If the config file states that the OS needs to log to both a file and the monitor we set the bools to true 
-         // so that our logging function knows to send the output to a file and the monitor
+         // This is for the config wanting us to log to the monitor as well as a file
          if (GlobalVariable.log == "Log to Both")
          {
             GlobalVariable.logToFile = true;
             GlobalVariable.logToMonitor = true;
          }
 
-         // If the config file states that the OS needs to only log to a file, we set a bool to true 
-         // so that our logging function knows to send the output to a file
+         // This is for the config only wanting us to log to a file
          else if (GlobalVariable.log == "Log to File")
          {
             GlobalVariable.logToFile = true;
          }
 
-         // If the config file states that the OS needs to only log to the monitor, we set a bool to true 
-         // so that our logging function knows to send the output to the monitor
+         // This is for the config only wanting us to log to the monitor
          else
          {
             GlobalVariable.logToMonitor = true;
          }
 
+         // This is to make sure that if the log file exists from a previous run of the system it will be overwritten.
          if (File.Exists(Directory.GetCurrentDirectory() + "/log.txt"))
          {
             File.Delete(Directory.GetCurrentDirectory() + "/log.txt");
@@ -374,7 +350,7 @@ namespace simulator
          string dummy = textReader.ReadLine();
          dummy = textReader.ReadLine();
 
-         // The textReader will get the rest of the text from the metadata file and place it in a string where it can be further processed
+         // the textReader will get the rest of the text from the metadata file and place it in a string where it can be further processed
          string whatWasReadIn = textReader.ReadToEnd();
 
          textReader.Close();// close the metadata file since we no longer need it
@@ -386,12 +362,12 @@ namespace simulator
          // while the second index is within the bounds of our data (its checking index2 since that one is always going to be farther than index1)
          while (index2 != -1)
          {
-            // We have a variable to hold the difference between index1 and index2 so that when we call the Substring function, we can give it a specific length to read
+            // we have a variable to hold the difference between index1 and index2 so that when we call the Substring function, we can give it a specific length to read
             // temp is going to be given a substring of whatWasReadIn starting at index1 and going for a length equal to the difference
             int difference = index2 - index1;
             string temp = whatWasReadIn.Substring(index1, difference);
 
-            // temp will trim the white space from the front and back of the temp string and add it to a list of data
+            //temp will trim the white space from the front and back of the temp string and add it to a list of data
             temp = temp.Trim();
             ourData.Add(temp);
 
@@ -400,7 +376,7 @@ namespace simulator
             index2 = whatWasReadIn.IndexOf(';', index2 + 1);
          }
 
-         // This code is only to make sure that the last part of the meta data which will be s(end) is taken and placed into our data as well
+         // this code is only to make sure that the last part of the meta data which will be s(end) is taken and placed into our data as well
          string temp2 = whatWasReadIn.Substring(index1);
          temp2 = temp2.Trim();
          ourData.Add(temp2);
@@ -408,20 +384,24 @@ namespace simulator
          //Begin to store data in their proper structures (ourAppList)
          foreach (string currentLine in ourData)
          {
-            switch (currentLine[0])    // Switch statement to compare the first character of each string from meta-data
+            switch (currentLine[0])
             {
                // Operating System Operations, Start & End
                case 'S':
                   {
-                     if (findDescriptor(currentLine) == "start")     // If it's the start of the system, display output
+                     // this is only to be done at the very start of the data for S(start)
+                     if (findDescriptor(currentLine) == "start")
                      {
+                        // this is to state how long it took to boot up the system
                         startTime.Stop();
                         microSec = calcMicroSec(startTime.ElapsedTicks);
                         log("SYSTEM - Boot, set up (" + startTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                      }
 
-                     else     // If this is the end of the meta-data, make sure everything has been added in
+                     // If this is the end of the meta-data, make sure everything has been added in
+                     else
                      {
+                        // a process has been started but not finished, finish loading it to the structure
                         if (procStarted)
                         {
                            Process tempProc2 = new Process();
@@ -430,6 +410,7 @@ namespace simulator
                            procStarted = false;
                         }
 
+                        // an application has been started but not finished, finish loading it loading it to the structure
                         if (appStarted)
                         {
                            Application tempApp2 = new Application();
@@ -447,38 +428,49 @@ namespace simulator
                // Program Application Operations, Start & End
                case 'A':
                   {
-                     if (findDescriptor(currentLine) == "start")     // Begin the process if creating an application
+                     // when he hit the starting statement of an application, we start the clock, enqueue and increment the index of the application, then set that index as the PID of the Application
+                     if (findDescriptor(currentLine) == "start")
                      {
                         realTime.Start();
-                        appStarted = true;
+                        appStarted = true;                                 // This is to show that we are currently loading an application into the structure
                         tempApp.procList.Clear();
-                        appQueue.Enqueue(appIndex);                        // Adds an index to our appQueue
+                        appQueue.Enqueue(appIndex);                        //Adds an index to our appQueue
                         appIndex++;                                        // Increment number of applications
                         tempApp.PIDNum = appIndex;
                         log("PID " + appIndex + " - Enter system");
                      }
 
-                     else     // If this is the end of an application, store values into list                                                
+                     // If this is the end of an application, store values into list
+                     else
                      {
+                        // declare temps to transfer information
                         Application tempApp2 = new Application();
                         Process tempProc2 = new Process();
+
+                        // if a process has been started for this application, add it to this applications list of processes
                         if (procStarted)
                         {
                            copyProcess(tempProc, tempProc2);
                            tempApp.procList.Add(tempProc2);
                            procStarted = false;
                         }
+
+                        // count the number of processes for this application and how many still need to be completed.
                         tempInt = tempApp.procList.Count;
                         tempApp.numProc = tempInt;
                         tempApp.procRem = tempInt;
+
+                        // copy the application to a temp so that it can be added to our list of applications
                         copyApplication(tempApp, tempApp2);
                         ourAppList.Add(tempApp2);
 
+                        // stop the clock and output how long it took to create the Application
                         realTime.Stop();
                         microSec = calcMicroSec(realTime.ElapsedTicks);
                         log("SYSTEM - Creating PID " + appIndex + " (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                         realTime.Reset();
 
+                        // reset this to false to show that we finished the current application we were working on loading into the structure
                         appStarted = false;
                      }
                      break;
@@ -487,16 +479,20 @@ namespace simulator
                // Process Operations, Run
                case 'P':
                   {
+                     // if we have already started loading a process into our structure
                      // Copy
-                     if (procStarted)     // If a process is being created, copy that process and begin a new one
+                     if (procStarted)
                      {
                         Process tempProc2 = new Process();
                         copyProcess(tempProc, tempProc2);
+
+                        // add it to our list of processes for the current application and reset the bool to show we are done loading it.
                         tempApp.procList.Add(tempProc2);
                         procStarted = false;
                      }
 
-                     if (procStarted == false)     // Begin creating a process
+                     // if we have not started loading a process, begin looking for information on the current process.
+                     if (procStarted == false)
                      {
                         tempInt = findCycleTime(currentLine);
                         tempProc.initCT = tempInt;
@@ -510,39 +506,20 @@ namespace simulator
                // Input Operations, Hard Drive & Keyboard
                case 'I':
                   {
+                     // create a temp IO variable to load info into
                      IO tempIO = new IO();
+
+                     // find the cycle time and place that information into the initCT and remCT for the temp
                      tempInt = findCycleTime(currentLine);
                      tempIO.initCT = tempInt;
                      tempIO.remCT = tempInt;
+
+                     // give it the type Input and determine what the descriptor is for this Input
                      tempIO.type = "Input";
                      tempIO.descriptor = findDescriptor(currentLine);
-                     if (procStarted == false)     // If there is no process to attach the IO to, create one
-                     {
-                        Process tempProc2 = new Process();
-                        tempProc.initCT = 0;
-                        tempProc.remCT = 0;
-                        tempProc.ioList.Add(tempIO);
-                        copyProcess(tempProc, tempProc2);
-                        tempApp.procList.Add(tempProc2);
-                     }
 
-                     else 
-                     {
-                        tempProc.ioList.Add(tempIO);        // Add to the last current running process
-                     }
-                     break;
-                  }
 
-               // Output Operations, Hard Drive & Monitor
-               case 'O':
-                  {
-                     IO tempIO = new IO();
-                     tempInt = findCycleTime(currentLine);
-                     tempIO.initCT = tempInt;
-                     tempIO.remCT = tempInt;
-                     tempIO.type = "Output";
-                     tempIO.descriptor = findDescriptor(currentLine);
-                     if (procStarted == false)     // If there is no process to attach the IO to, create one
+                     if (procStarted == false)
                      {
                         Process tempProc2 = new Process();
                         tempProc.initCT = 0;
@@ -555,12 +532,45 @@ namespace simulator
                      else
                      {
                         tempProc.ioList.Add(tempIO);        //Add to the last current running process
-                     }              
+                     }
+                     break;
+                  }
+
+               // Output Operations, Hard Drive & Monitor
+               case 'O':
+                  {
+                     // create a temp IO variable to load info into
+                     IO tempIO = new IO();
+
+                     // find the cycle time and place that information into the initCT and remCT for the temp
+                     tempInt = findCycleTime(currentLine);
+                     tempIO.initCT = tempInt;
+                     tempIO.remCT = tempInt;
+
+                     // give it the type Output and determine what the descriptor is for this Output
+                     tempIO.type = "Output";
+                     tempIO.descriptor = findDescriptor(currentLine);
+
+                     if (procStarted == false)
+                     {
+                        Process tempProc2 = new Process();
+                        tempProc.initCT = 0;
+                        tempProc.remCT = 0;
+                        tempProc.ioList.Add(tempIO);
+                        copyProcess(tempProc, tempProc2);
+                        tempApp.procList.Add(tempProc2);
+                     }
+
+                     else
+                     {
+                        tempProc.ioList.Add(tempIO);        //Add to the last current running process
+                     }
                      break;
                   }
 
                default:
-                  { 
+                  {
+                     // if there is something wrong in the metadata file, output an error message and exit the program
                      Console.WriteLine("Error: Problems occured reading the meta-data. \nPress a key to exit.");
                      Console.ReadKey();
                      Environment.Exit(1);
@@ -569,67 +579,68 @@ namespace simulator
             }
          }
 
-         /*-------------------------------------------------------------------------
-           Begin the main loop of the simulation based on the scheduling algorithm
-         -------------------------------------------------------------------------*/
-
-         realTime.Reset();
-
+         // This is for the scheduler being either FIFO or SJF since the coding is the same except for the processes being sorted from least to greatest if SJF is chosen
          if (GlobalVariable.scheduler == "FIFO" || GlobalVariable.scheduler == "SJF")
          {
-            if (GlobalVariable.scheduler == "SJF")    // Sort shortest job first before processing
+            // this is ony for the scheduler being declared as SJF which means the processes get sorted before being processed
+            if (GlobalVariable.scheduler == "SJF")
             {
-               // Sort all processes 
+               //Sort all processes 
                for (int w = 0; w < ourAppList.Count; w++)
                {
                   ourAppList[w].sortSJF();
                }
             }
 
-            // Run the program in first-in-first-out order
-            while (appQueue.Count != 0)        // While the queue is NOT empty we still need to continue processing
+            //Run the program in first in first out order while there is still information in the queue to be processed
+            while (appQueue.Count != 0)        //While the queue is NOT empty we still need 
             {
-               Thread.Sleep(1);                                                     // Test for interupt (1millisecond)
-               int currAppIndex = appQueue.Dequeue();                               // Get an application from the queue to begin processing
-               int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);   // Returns -1 if complete
+               Thread.Sleep(1);    //test for interupt (1millisecond)
+               int currAppIndex = appQueue.Dequeue(); // dequeue the first index from the queue of applications
+               int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]); // Find the index of the next process to run within this application, Returns -1 if all processes for this application are complete
                int currIOIndex = -1;
 
-               realTime.Start();
-
-               if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)     // Begin IO if processing is finished
+               // if the current process of the current application is complete, the IO for that process gets handled
+               if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)
                {
+                  // start the clock
+                  realTime.Start();
                   //Handle IO Here
                   Thread.Sleep(1);    //test for interupt (1millisecond)
-                  currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);  // Find next IO to handle
-
-                  ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].hasStarted = true;
+                  currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);  //Find next IO to handle
+                  ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].hasStarted = true; // set the bool to true so that the OS knows the IO has started
                   ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].beginTime = GlobalVariable.clockTime;
                   ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].endTime = (GlobalVariable.clockTime + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].initCT);
                   Thread.Sleep(1);    //test for interupt (1millisecond)
                   realTime.Stop();
+
+                  // let the user know the IO is started and that the system is swapping processes
                   microSec = calcMicroSec(realTime.ElapsedTicks);
                   log("SYSTEM – Managing I/O  (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                   log("PID " + (currAppIndex + 1) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started");
                   realTime.Reset();
 
-                  Thread.Sleep(1000);    // Test for interrupt (1second)
+                  // this is to check if the IO we were just working on has completed
+                  Thread.Sleep(1000);    //test for interupt (1millisecond)
                   Thread thread = new Thread(() => startThread(ourAppList[currAppIndex], ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex])); ;
                   thread.Start();
-                  Thread.Sleep(1000);    // Test for interrupt (1second)
+                  Thread.Sleep(1000);    //test for interupt (1second)
                   currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);
 
-
-                  if (currIOIndex == -1)     // Checks if IO is finished in the current process
+                  // if it has, set the IO's bool to true so we know its done
+                  if (currIOIndex == -1)
                   {
                      ourAppList[currAppIndex].procList[currProcIndex].finished = true;
                   }
                }
+
+               // if the current process hasn't finished yet finish it before we worry about it's IO
                else
                {
-                  while (ourAppList[currAppIndex].procList[currProcIndex].remCT != 0)     // Begin processing for an application
+                  while (ourAppList[currAppIndex].procList[currProcIndex].remCT != 0)
                   {
-                     // Decrease remCT and increment the clock variable
-                     Thread.Sleep(1);    // Test for interupt (1millisecond)
+                     //Decrease remCT and increment the clock variable
+                     Thread.Sleep(1);    //test for interupt (1millisecond)
                      ourAppList[currAppIndex].procList[currProcIndex].remCT--;
                      GlobalVariable.clockTime++;
                   }
@@ -645,12 +656,15 @@ namespace simulator
                }
                //Once a process is finished check if entire app is finished
                currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);
+
+               // if the current application is finished then don't enqueue it
                if (currProcIndex != -1)
                {
                   //If app is not finished enqueue it back to our appQueue
                   appQueue.Enqueue(currAppIndex);
                }//If currProcIndex does = -1, the app is finished
 
+               // this is to make sure the process doesn't quit before the thread with its IO has finished
                else
                {
                   while (GlobalVariable.threadRunning && appQueue.Count == 0)
@@ -659,14 +673,17 @@ namespace simulator
                      Thread.Sleep(1);
                   }
                   log("PID " + (currAppIndex + 1) + " – Exit system");
+                  realTime.Start();
                   realTime.Stop();
                   microSec = calcMicroSec(realTime.ElapsedTicks);
                   log("SYSTEM – Ending process (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                   realTime.Reset();
                }
 
+               // if there is still information in the queue of applications let the user know the os is swapping processes
                if (appQueue.Count > 0)
                {
+                  realTime.Start();
                   realTime.Stop();
                   microSec = calcMicroSec(realTime.ElapsedTicks);
                   log("SYSTEM – Swapping processes (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
@@ -678,45 +695,53 @@ namespace simulator
 
          else if (GlobalVariable.scheduler == "RR")
          {
-            // Run the program in first-in-first-out order
-            while (appQueue.Count != 0)        // While the queue is NOT empty we still need to continue processing 
+            //Run the program in first in first out order
+            while (appQueue.Count != 0)        //While the queue is NOT empty we still need 
             {
+               // reset and start the timer
+               realTime.Reset();
+               realTime.Start();
                Thread.Sleep(1);    //test for interupt (1millisecond)
-               int currAppIndex = appQueue.Dequeue();
-               int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);//Returns -1 if complete
+
+               int currAppIndex = appQueue.Dequeue(); // dequeue the first index from the queue of applications
+               int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]); // Find the index of the next process to run within this application, Returns -1 if all processes for this application are complete
                int currIOIndex = -1;
 
-               realTime.Start();
-
+               // if the current process of the current application is complete, the IO for that process gets handled
                if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)
                {
                   //Handle IO Here
                   Thread.Sleep(1);    //test for interupt (1millisecond)
                   currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);  //Find next IO to handle
-                  ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].hasStarted = true;
+                  ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].hasStarted = true; // set the bool to true so that the OS knows the IO has started
                   ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].beginTime = GlobalVariable.clockTime;
                   ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].endTime = (GlobalVariable.clockTime + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].initCT);
                   Thread.Sleep(1);    //test for interupt (1millisecond)
 
+                  // let the user know the IO is started and that the system is swapping processes
                   realTime.Stop();
                   microSec = calcMicroSec(realTime.ElapsedTicks);
                   log("SYSTEM – Managing I/O  (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                   log("PID " + (currAppIndex + 1) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started");
-                  realTime.Reset();
 
-                  Thread.Sleep(1000);    // Test for interupt (1second)
+                  // this is to check if the IO we were just working on has completed
+                  Thread.Sleep(1000);    //test for interupt (1millisecond)
                   Thread thread = new Thread(() => startThread(ourAppList[currAppIndex], ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex])); ;
                   thread.Start();
-                  Thread.Sleep(1000);    // Test for interupt (1second)
+                  Thread.Sleep(1000);    //test for interupt (1second)
                   currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);
 
+                  // if it has, set the IO's bool to true so we know its done
                   if (currIOIndex == -1)
                   {
                      ourAppList[currAppIndex].procList[currProcIndex].finished = true;
                   }
                }
+
+               // if the current process hasn't completed we have to process it based on the quantum
                else
                {
+                  // this is to track how many cycles have gone by and to compare it to the quantum
                   int cyclesRan = 0;
 
                   for (int q = 0; q < GlobalVariable.quantum; q++)
@@ -732,10 +757,11 @@ namespace simulator
                      }
                   }
 
+                  // output to the user how long the process ran
                   int procTime = cyclesRan * GlobalVariable.procTime;
-
                   log("PID " + (currAppIndex + 1) + " - Processing (" + procTime + " mSec)");
 
+                  // if the remCT is now zero for this process we know that it is completed
                   if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)//if proc rem ct = 0
                   {
                      if (ourAppList[currAppIndex].procList[currProcIndex].ioList.Count == 0)//test if no io (to set finished)
@@ -744,6 +770,7 @@ namespace simulator
                      }
                   }
                }
+
                //Once a process is finished check if entire app is finished
                currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);
 
@@ -753,6 +780,7 @@ namespace simulator
                   appQueue.Enqueue(currAppIndex);
                }//If currProcIndex does = -1, the app is finished
 
+               // this is to check for any IO threads running for the process
                else
                {
                   while (GlobalVariable.threadRunning && appQueue.Count == 0)
@@ -765,20 +793,26 @@ namespace simulator
                   realTime.Stop();
                   microSec = calcMicroSec(realTime.ElapsedTicks);
                   log("SYSTEM – Ending process (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
-                  realTime.Reset();
                }
 
+               // if there is still information in the AppQueue, let the user know we are swapping processes
                if (appQueue.Count > 0)
                {
                   realTime.Stop();
                   microSec = calcMicroSec(realTime.ElapsedTicks);
                   log("SYSTEM – Swapping processes (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
-                  realTime.Reset();
                }
             }
+            // reset and start the clock again
+            realTime.Reset();
+            realTime.Start();
          }
 
-         if ( GlobalVariable.logToFile )
+         // since all the processing is done stop the clock
+         realTime.Stop();
+
+         // if the config file specified to log to a file, do it now
+         if (GlobalVariable.logToFile)
          {
             using (StreamWriter writer = new StreamWriter(Directory.GetCurrentDirectory() + "//log.txt", true))
             {
@@ -790,6 +824,7 @@ namespace simulator
             }
          }
 
+         // ask for input from the user so the screen won't automatically shut off. When input is given end the program.
          Console.ReadKey();
          Environment.Exit(0);
 
