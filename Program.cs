@@ -459,6 +459,44 @@ namespace simulator
             // for each application, the list of processes will be sorted from least to greatest based on remCT
          }
 
+         else if (GlobalVariable.scheduler == "RR")
+         {
+             while (appQueue.Count != 0)
+             {
+                 int currAppIndex = appQueue.Dequeue();
+                 int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);
+                 int currIOIndex;
+                 if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)
+                 {
+                     //begin I/O thread stuff
+                 }
+                 else
+                 {
+                     for (int cycleTime = 0; cycleTime < GlobalVariable.quantum; cycleTime++)
+                     {
+                         //Decrease remCT and increment the clock variable
+                         ourAppList[currAppIndex].procList[currProcIndex].remCT--;
+                         GlobalVariable.clockTime++;
+                     }
+                     int procTime = ourAppList[currAppIndex].procList[currProcIndex].initCT * GlobalVariable.procTime;
+                     Console.WriteLine("PID " + (currAppIndex + 1) + " - Processing (" + procTime + ')');
+                 }
+
+                 //Once a process is finished check if entire app is finished
+                 currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);
+                 if (currProcIndex != -1)
+                 {
+                     //If app is not finished enqueue it back to our appQueue
+                     appQueue.Enqueue(currAppIndex);
+                 }//If currProcIndex does = -1, the app is finished
+                 else
+                 {
+                     Console.WriteLine("PID " + (currAppIndex + 1) + " – Exit system");
+                     Console.WriteLine("SYSTEM – Ending process (TIME)");
+                 }
+             }
+         }
+
          else if (GlobalVariable.scheduler == "FIFO")
          {
             //Run the program in first in first out order
