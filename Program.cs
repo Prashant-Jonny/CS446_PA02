@@ -45,6 +45,7 @@ namespace simulator
       public List<Process> procList = new List<Process>();
       public bool finished = false;
 
+      // Sorts the application processes based on the shortest job first
       public void sortSJF()
       {
          this.procList = procList.OrderBy(o=>o.initCT).ToList();
@@ -67,7 +68,7 @@ namespace simulator
       public int remCT;
       public int beginTime;
       public int endTime;
-      public char type;
+      public string type;
       public string descriptor;
       public bool hasStarted = false;
    }
@@ -79,7 +80,7 @@ namespace simulator
         Functions
        ----------*/
 
-      static int findCycleTime(string s)      //Determines cycle time in our meta-data string
+      static int findCycleTime(string s)                                // Determines cycle time in our meta-data string
       {
          int len = s.Length;
          int tempInt = 0;
@@ -101,7 +102,7 @@ namespace simulator
          return tempInt;
       }
 
-      static string findDescriptor(string s) //Determines string value between ()'s in meta-data string
+      static string findDescriptor(string s)                            // Determines string value between ()'s in meta-data string
       {
          int len = s.Length, x = 0;
          string tempString = null;
@@ -123,7 +124,7 @@ namespace simulator
          return tempString;//Return the value (i.e. "monitor" or "keyboard")
       }
 
-      static void copyProcess(Process src, Process dest)
+      static void copyProcess(Process src, Process dest)                // Makes a copy of a process
       {
          dest.initCT = src.initCT;
          dest.remCT = src.remCT;
@@ -139,7 +140,7 @@ namespace simulator
          }
       }
 
-      static void copyApplication(Application src, Application dest)
+      static void copyApplication(Application src, Application dest)    // Makes a copy of an application
       {
          dest.PIDNum = src.PIDNum;
          dest.numProc = src.numProc;
@@ -153,7 +154,7 @@ namespace simulator
          }
       }
 
-      static int findIndexOfNextProc(Application currApp)
+      static int findIndexOfNextProc(Application currApp)               // Finds the index of the next process in an application
       {
          for (int x = 0; x < currApp.procList.Count; x++)
          {
@@ -166,7 +167,7 @@ namespace simulator
          return -1;
       }
 
-      static int findIndexOfNextIO(Process currProc)
+      static int findIndexOfNextIO(Process currProc)                    // Finds the index of the next IO in a process
       {
          for (int x = 0; x < currProc.ioList.Count; x++)
          {
@@ -182,7 +183,16 @@ namespace simulator
          return -1;
       }
 
-      static void startThread(Application threadedApp, IO threadedIO)
+      static long calcMicroSec( long ticks )                            // Converts to from ticks to microseconds
+      {
+         long microSec;
+
+         microSec = (ticks * 1000000) / Stopwatch.Frequency;
+
+         return microSec;
+      }
+
+      static void startThread(Application threadedApp, IO threadedIO)   // The function a thread runs when IO operation has started
       {
          GlobalVariable.threadRunning = true;
 
@@ -194,11 +204,11 @@ namespace simulator
          //The IO Operation has finished, so set remCT to 0
          threadedIO.remCT = 0;
          //Display message that notifies it finished
-         log("PID " + threadedApp.PIDNum + " – " + threadedIO.type + ", " + threadedIO.descriptor + " completed <" + GlobalVariable.clockTime + '>');
+         log("PID " + threadedApp.PIDNum + " – " + threadedIO.type + ", " + threadedIO.descriptor + " completed");
          GlobalVariable.threadRunning = false;
       }
 
-      static void log(string str)
+      static void log(string str)                                       // Log to monitor, log to file, or both
       {
          if (GlobalVariable.logToMonitor == true)
          {
@@ -207,12 +217,11 @@ namespace simulator
 
          if (GlobalVariable.logToFile == true)
          {
-            using (StreamWriter writer = new StreamWriter( Directory.GetCurrentDirectory() +"//log.txt", true))
-            {
-               writer.WriteLine(str);
-            }
+            logData.Add(str);
          }
       }
+
+      public static List<string> logData = new List<string>();          // Global list that stores our log data
 
       static void Main(string[] args)
       {
@@ -220,21 +229,18 @@ namespace simulator
            Variables 
          -----------*/
 
-         string configFile,          // Variable to store the configuration file
-                configPath;          // Variable to store the path to the configuration file
+         string configFile;          // Variable to store the configuration file
          bool appStarted = false,    // States if an application is started
               procStarted = false;   // States if a process is started
-         int appIndex = 0,           // Application index
-             procIndex = 0,          // Process index
-             ioIndex;                // IO index
+         int appIndex = 0;           // Application index
          long microSec;              // Variable to store calculated microseconds
 
          List<string> ourData = new List<string>();               // Temporary list to hold all meta data
          List<Application> ourAppList = new List<Application>();  // Our application list
          Queue<int> appQueue = new Queue<int>();                  // Queue to determine which application to run next
 
-         Stopwatch realTime = new Stopwatch();                    // Creates a timer for measuring real-time
-         Stopwatch startTime = new Stopwatch();                   // Creates a timer for measuring start-time
+         Stopwatch realTime = new Stopwatch();                    // Creates a timer for to simulate real-time, used for system output
+         Stopwatch startTime = new Stopwatch();                   // Creates a timer to measure the start-time
 
          Application tempApp = new Application();  // Temporary application for storing purposes
          Process tempProc = new Process();         // Temporary process for storing purposes
@@ -256,9 +262,6 @@ namespace simulator
          else    // If there is a valid argument, start reading in data
          {
             configFile = args[0];                           // Get the configuration file name
-            //configPath = Directory.GetCurrentDirectory();   // This is the current directory of the running program for our purposes, 
-            //Console.WriteLine(configPath);                // TEST
-            //Console.WriteLine(configFile);
 
             try      // Read in all the lines to an array, prints an error if an exception is caught
             {
@@ -267,9 +270,15 @@ namespace simulator
 
                for (index = 0; index < lines.Length; index++)
                {
+                  if( index == 4 )     // If it's file path, only get the string characters past the first colon
+                  {
+                     lines[index] = lines[index].Substring(11);
+                     index++;
+                  }
+
                   if (lines[index].Contains(":"))
                   {
-                     lines[index] = lines[index].Split(':')[1];   // Get the right side of the semi-colon and replace in previous array
+                     lines[index] = lines[index].Split(':')[1];   // Get the right side of the colon and replace in previous array
                      lines[index] = lines[index].Trim();          // Gets rid of white-space
                   }
                }
@@ -287,6 +296,13 @@ namespace simulator
                GlobalVariable.memType = lines[10];
                GlobalVariable.log = lines[11];
 
+               // Determine if configuration file had a valid scheduling algorithm, else print an error
+               if( GlobalVariable.scheduler != "FIFO" && GlobalVariable.scheduler != "RR" && GlobalVariable.scheduler != "SJF" )
+               {
+                  Console.WriteLine("Error: The scheduling type in the configuration file is not supported. \nTry again using FIFO, RR, or SJF. \nPress a key to exit.");
+                  Console.ReadKey();
+                  Environment.Exit(1);
+               }
             }
 
             catch    // Print out an error if the configuration file could not be read
@@ -301,7 +317,7 @@ namespace simulator
            Read in the meta-data to their respectable classes
          ----------------------------------------------------*/
 
-         // if the config file states that the OS needs to log to both a file and the monitor we set 2 bools to true 
+         // If the config file states that the OS needs to log to both a file and the monitor we set the bools to true 
          // so that our logging function knows to send the output to a file and the monitor
          if (GlobalVariable.log == "Log to Both")
          {
@@ -309,14 +325,14 @@ namespace simulator
             GlobalVariable.logToMonitor = true;
          }
 
-         // if the config file states that the OS needs to only log to a file, we set a bool to true 
+         // If the config file states that the OS needs to only log to a file, we set a bool to true 
          // so that our logging function knows to send the output to a file
          else if (GlobalVariable.log == "Log to File")
          {
             GlobalVariable.logToFile = true;
          }
 
-         // if the config file states that the OS needs to only log to the monitor, we set a bool to true 
+         // If the config file states that the OS needs to only log to the monitor, we set a bool to true 
          // so that our logging function knows to send the output to the monitor
          else
          {
@@ -329,7 +345,7 @@ namespace simulator
          }
 
          // Here we open the file containing the meta data for our OS to process
-         FileStream readStream = File.OpenRead("C://Users/Jennifer/Documents/GitHub/CS446_PA02/metadata.txt");
+         FileStream readStream = File.OpenRead(GlobalVariable.filePath + "/metadata.txt");
          TextReader textReader = new StreamReader(readStream);
 
          // This is so that we can ignore the first line of the metadata file as well as the blank line
@@ -367,12 +383,9 @@ namespace simulator
          temp2 = temp2.Trim();
          ourData.Add(temp2);
 
-         realTime.Start();
-
-         //Begin to store data in proper structures (ourAppList)
+         //Begin to store data in their proper structures (ourAppList)
          foreach (string currentLine in ourData)
          {
-            //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
             switch (currentLine[0])
             {
                // Operating System Operations, Start & End
@@ -381,14 +394,13 @@ namespace simulator
                      if (findDescriptor(currentLine) == "start")
                      {
                         startTime.Stop();
-                        microSec = (startTime.ElapsedTicks * 1000000) / Stopwatch.Frequency;
-                        log("SYSTEM - Boot, set up <" + microSec + " \u00b5Sec>");
+                        microSec = calcMicroSec(startTime.ElapsedTicks);
+                        log("SYSTEM - Boot, set up (" + startTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                      }
 
                      // If this is the end of the meta-data, make sure everything has been added in
                      else
                      {
-                        realTime.Stop();
                         if (procStarted)
                         {
                            Process tempProc2 = new Process();
@@ -416,16 +428,13 @@ namespace simulator
                   {
                      if (findDescriptor(currentLine) == "start")
                      {
+                        realTime.Start();
                         appStarted = true;
                         tempApp.procList.Clear();
                         appQueue.Enqueue(appIndex);                        //Adds an index to our appQueue
                         appIndex++;                                        // Increment number of applications
                         tempApp.PIDNum = appIndex;
-                        realTime.Stop();
-                        microSec = (realTime.ElapsedTicks * 1000000) / Stopwatch.Frequency;
                         log("PID " + appIndex + " - Enter system");
-                        log("SYSTEM - Creating PID " + appIndex + " <" + microSec + " \u00b5Sec>");
-                        realTime.Start();
                      }
 
                      // If this is the end of an application, store values into list
@@ -444,6 +453,12 @@ namespace simulator
                         tempApp.procRem = tempInt;
                         copyApplication(tempApp, tempApp2);
                         ourAppList.Add(tempApp2);
+
+                        realTime.Stop();
+                        microSec = calcMicroSec(realTime.ElapsedTicks);
+                        log("SYSTEM - Creating PID " + appIndex + " (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
+                        realTime.Reset();
+
                         appStarted = false;
                      }
                      break;
@@ -479,9 +494,22 @@ namespace simulator
                      tempInt = findCycleTime(currentLine);
                      tempIO.initCT = tempInt;
                      tempIO.remCT = tempInt;
-                     tempIO.type = 'I';
+                     tempIO.type = "Input";
                      tempIO.descriptor = findDescriptor(currentLine);
-                     tempProc.ioList.Add(tempIO);        //Add to the last current running process
+                     if (procStarted == false)
+                     {
+                        Process tempProc2 = new Process();
+                        tempProc.initCT = 0;
+                        tempProc.remCT = 0;
+                        tempProc.ioList.Add(tempIO);
+                        copyProcess(tempProc, tempProc2);
+                        tempApp.procList.Add(tempProc2);
+                     }
+
+                     else 
+                     {
+                        tempProc.ioList.Add(tempIO);        //Add to the last current running process
+                     }
                      break;
                   }
 
@@ -492,9 +520,22 @@ namespace simulator
                      tempInt = findCycleTime(currentLine);
                      tempIO.initCT = tempInt;
                      tempIO.remCT = tempInt;
-                     tempIO.type = 'O';
+                     tempIO.type = "Output";
                      tempIO.descriptor = findDescriptor(currentLine);
-                     tempProc.ioList.Add(tempIO);        //Add to the last current running process
+                     if (procStarted == false)
+                     {
+                        Process tempProc2 = new Process();
+                        tempProc.initCT = 0;
+                        tempProc.remCT = 0;
+                        tempProc.ioList.Add(tempIO);
+                        copyProcess(tempProc, tempProc2);
+                        tempApp.procList.Add(tempProc2);
+                     }
+
+                     else
+                     {
+                        tempProc.ioList.Add(tempIO);        //Add to the last current running process
+                     }              
                      break;
                   }
 
@@ -529,6 +570,7 @@ namespace simulator
 
                if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)
                {
+                  realTime.Start();
                   //Handle IO Here
                   Thread.Sleep(1);    //test for interupt (1millisecond)
                   currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);  //Find next IO to handle
@@ -536,9 +578,11 @@ namespace simulator
                   ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].beginTime = GlobalVariable.clockTime;
                   ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].endTime = (GlobalVariable.clockTime + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].initCT);
                   Thread.Sleep(1);    //test for interupt (1millisecond)
-
-                  log("SYSTEM – Managing I/O  <" + GlobalVariable.clockTime + '>');
-                  log("PID " + (currAppIndex + 1) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started.");
+                  realTime.Stop();
+                  microSec = calcMicroSec(realTime.ElapsedTicks);
+                  log("SYSTEM – Managing I/O  (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
+                  log("PID " + (currAppIndex + 1) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started");
+                  realTime.Reset();
 
                   Thread.Sleep(1000);    //test for interupt (1millisecond)
                   Thread thread = new Thread(() => startThread(ourAppList[currAppIndex], ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex])); ;
@@ -563,7 +607,7 @@ namespace simulator
 
                   int procTime = ourAppList[currAppIndex].procList[currProcIndex].initCT * GlobalVariable.procTime;
 
-                  log("PID " + (currAppIndex + 1) + " - Processing (" + procTime + ") <" + GlobalVariable.clockTime + '>');
+                  log("PID " + (currAppIndex + 1) + " - Processing (" + procTime + " mSec)");
 
                   if (ourAppList[currAppIndex].procList[currProcIndex].ioList.Count == 0)
                   {
@@ -585,14 +629,21 @@ namespace simulator
                      GlobalVariable.clockTime++;
                      Thread.Sleep(1);
                   }
-
                   log("PID " + (currAppIndex + 1) + " – Exit system");
-                  log("SYSTEM – Ending process <" + GlobalVariable.clockTime + '>');
+                  realTime.Start();
+                  realTime.Stop();
+                  microSec = calcMicroSec(realTime.ElapsedTicks);
+                  log("SYSTEM – Ending process (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
+                  realTime.Reset();
                }
 
                if (appQueue.Count > 0)
                {
-                  log("SYSTEM – Swapping processes <" + GlobalVariable.clockTime + '>');
+                  realTime.Start();
+                  realTime.Stop();
+                  microSec = calcMicroSec(realTime.ElapsedTicks);
+                  log("SYSTEM – Swapping processes (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
+                  realTime.Reset();
                }
             }
 
@@ -603,6 +654,8 @@ namespace simulator
             //Run the program in first in first out order
             while (appQueue.Count != 0)        //While the queue is NOT empty we still need 
             {
+               realTime.Reset();
+               realTime.Start();
                Thread.Sleep(1);    //test for interupt (1millisecond)
                int currAppIndex = appQueue.Dequeue();
                int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);//Returns -1 if complete
@@ -618,8 +671,10 @@ namespace simulator
                   ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].endTime = (GlobalVariable.clockTime + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].initCT);
                   Thread.Sleep(1);    //test for interupt (1millisecond)
 
-                  log("SYSTEM – Managing I/O  <" + GlobalVariable.clockTime + '>');
-                  log("PID " + (currAppIndex + 1) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started.");
+                  realTime.Stop();
+                  microSec = calcMicroSec(realTime.ElapsedTicks);
+                  log("SYSTEM – Managing I/O  (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
+                  log("PID " + (currAppIndex + 1) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started");
 
                   Thread.Sleep(1000);    //test for interupt (1millisecond)
                   Thread thread = new Thread(() => startThread(ourAppList[currAppIndex], ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex])); ;
@@ -651,7 +706,7 @@ namespace simulator
 
                   int procTime = cyclesRan * GlobalVariable.procTime;
 
-                  log("PID " + (currAppIndex + 1) + " - Processing (" + procTime + ") <" + GlobalVariable.clockTime + '>');
+                  log("PID " + (currAppIndex + 1) + " - Processing (" + procTime + " mSec)");
 
                   if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)//if proc rem ct = 0
                   {
@@ -679,21 +734,34 @@ namespace simulator
                   }
 
                   log("PID " + (currAppIndex + 1) + " – Exit system");
-                  log("SYSTEM – Ending process <" + GlobalVariable.clockTime + '>');
+                  realTime.Stop();
+                  microSec = calcMicroSec(realTime.ElapsedTicks);
+                  log("SYSTEM – Ending process (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                }
 
                if (appQueue.Count > 0)
                {
-                  log("SYSTEM – Swapping processes <" + GlobalVariable.clockTime + '>');
+                  realTime.Stop();
+                  microSec = calcMicroSec(realTime.ElapsedTicks);
+                  log("SYSTEM – Swapping processes (" + realTime.ElapsedMilliseconds + " mSec | " + microSec + " \u00b5Sec)");
                }
             }
+            realTime.Reset();
+            realTime.Start();
          }
 
-         else
+         realTime.Stop();
+
+         if ( GlobalVariable.logToFile )
          {
-            Console.WriteLine("Error: The scheduling type in the configuration file is not supported. Try again using FIFO/RR/SJF \nPress a key to exit.");
-            Console.ReadKey();
-            Environment.Exit(1);
+            using (StreamWriter writer = new StreamWriter(Directory.GetCurrentDirectory() + "//log.txt", true))
+            {
+               foreach (String line in logData)
+               {
+                  Console.WriteLine(line);
+                  writer.WriteLine(line);
+               }
+            }
          }
 
          Console.ReadKey();
