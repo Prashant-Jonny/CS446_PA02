@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.IO;
+using System.Diagnostics;
 
 namespace simulator
 {
@@ -40,7 +42,7 @@ namespace simulator
 
       public void sortSRTF()
       {
-         this.procList = procList.OrderBy(o => o.remCT).ToList();
+         this.procList = procList.OrderBy(o=>o.remCT).ToList();
       }
    }
 
@@ -137,16 +139,6 @@ namespace simulator
          }
       }
 
-      static bool isAppFinished(Application currApp)
-      {
-         foreach(Process currentProc in currApp.procList)
-         {
-            //if (currentProc)
-
-         }
-         return true;
-      }
-
       static int findIndexOfNextProc(Application currApp)
       {
          for (int x = 0; x < currApp.procList.Count; x++)
@@ -157,6 +149,29 @@ namespace simulator
             }
          }
          return -1;
+      }
+
+      static int findIndexOfNextIO(Process currProc)
+      {
+         for (int x = 0; x < currProc.ioList.Count; x++)
+         {
+            if (currProc.ioList[x].remCT != 0)
+            {
+               return x;
+            }
+         }
+         return -1;
+      }
+
+      static void startThread(Application threadedApp, IO threadedIO)
+      {
+         while (GlobalVariable.clockTime < threadedIO.endTime)
+         {
+            //Wait for clock to be past endtime
+         }
+         //Display message that notifies it finished
+         Console.WriteLine("PID " + threadedApp.PIDNum + " – " + threadedIO.type + " , " + threadedIO.descriptor + " completed <TIME>");
+
       }
 
       static void Main(string[] args)
@@ -170,6 +185,8 @@ namespace simulator
          int appIndex = 0, procIndex = 0, tempInt = 0;            // Application and process index variables
          List<string> ourData = new List<string>();               // Temporary list to hold all meta data
          List<Application> ourAppList = new List<Application>();  // Our application list
+         Stopwatch realTime = new Stopwatch();
+         Stopwatch startTime = new Stopwatch();
          Queue<int> appQueue = new Queue<int>();
 
          Application tempApp = new Application();
@@ -182,7 +199,7 @@ namespace simulator
          /*-----------------------------------------------------------
            Read in the configuration file from command-line argument 
          -----------------------------------------------------------*/
-
+         startTime.Start();
          // Checks if user had input an argument, if not, exit the program
          if (args.Length == 0)
          {
@@ -279,6 +296,7 @@ namespace simulator
          //Begin to store data in proper structures (ourAppList)
          foreach (string currentLine in ourData)
          {
+            realTime.Start();
             //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
             switch (currentLine[0])
             {
@@ -287,7 +305,8 @@ namespace simulator
                   {
                      if (findDescriptor(currentLine) == "start")
                      {
-                        Console.WriteLine("SYSTEM - Boot, set up (Need to calculate time, somehow)");
+                        startTime.Stop();
+                        Console.WriteLine("SYSTEM - Boot, set up (" + startTime.ElapsedMilliseconds + " mSec)");
                      }
 
                      // If this is the end of the meta-data, make sure everything has been added in
@@ -326,7 +345,7 @@ namespace simulator
                         appIndex++;                                        // Increment number of applications
                         tempApp.PIDNum = appIndex;
                         Console.WriteLine("PID " + appIndex + " - Enter system");
-                        Console.WriteLine("SYSTEM - Creating PID " + appIndex + " (TIME)");
+                        Console.WriteLine("SYSTEM - Creating PID " + appIndex + " (" + realTime.ElapsedMilliseconds + " mSec)");
                      }
 
                      // If this is the end of an application, store values into list
@@ -409,7 +428,7 @@ namespace simulator
             }
          }
 
-         // Check if all data was read in correctly
+         /* Check if all data was read in correctly
          foreach (Application a in ourAppList)
          {
             Console.WriteLine("PID #" + a.PIDNum);
@@ -427,7 +446,7 @@ namespace simulator
                   Console.WriteLine("\t" + "\t" + "\t" + a.procList[tempInt].ioList[abc].descriptor);
                }
             }
-         }
+         }*/
 
          if (GlobalVariable.scheduler == "SJF")
          {
@@ -447,24 +466,34 @@ namespace simulator
             {
                int currAppIndex = appQueue.Dequeue();
                int currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);//Returns -1 if complete
+               int currIOIndex;
                if (ourAppList[currAppIndex].procList[currProcIndex].remCT == 0)
                {
                   //Handle IO Here
-                  //Use thread to start IO
-                  ourAppList[currAppIndex].procList[currProcIndex].finished = true;//I'm temporarily going to set this to finished for testing purposes
+                  currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);  //Find next IO to handle
+                  ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].beginTime = GlobalVariable.clockTime;
+                  ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].endTime = (GlobalVariable.clockTime + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].initCT);
+                  Console.WriteLine("SYSTEM – Managing I/O <TIME>");
+                  Console.WriteLine("PID " + (currAppIndex) + " - " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].type + ", " + ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].descriptor + " started.");
+                  ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex].remCT = 0;
+                  Thread thread = new Thread(() => startThread(ourAppList[currAppIndex], ourAppList[currAppIndex].procList[currProcIndex].ioList[currIOIndex]));
+                  thread.Start();
+                  currIOIndex = findIndexOfNextIO(ourAppList[currAppIndex].procList[currProcIndex]);
+                  if (currIOIndex == -1)
+                  {
+                     ourAppList[currAppIndex].procList[currProcIndex].finished = true;
+                  }
                }
                else
                {
-                  Console.WriteLine("Start of Proc: " + ourAppList[currAppIndex].procList[currProcIndex].remCT);
                   while (ourAppList[currAppIndex].procList[currProcIndex].remCT != 0)
                   {
-                     //Check for an interupt in the interupt queue
-
                      //Decrease remCT and increment the clock variable
                      ourAppList[currAppIndex].procList[currProcIndex].remCT--;
                      GlobalVariable.clockTime++;
                   }
-                  Console.WriteLine("End of Proc: " + ourAppList[currAppIndex].procList[currProcIndex].remCT);
+                  int procTime = ourAppList[currAppIndex].procList[currProcIndex].initCT * GlobalVariable.procTime;
+                  Console.WriteLine("PID " + (currAppIndex + 1) + " - Processing (" + procTime + ')');
                }
                //Once a process is finished check if entire app is finished
                currProcIndex = findIndexOfNextProc(ourAppList[currAppIndex]);
@@ -472,8 +501,12 @@ namespace simulator
                {
                   //If app is not finished enqueue it back to our appQueue
                   appQueue.Enqueue(currAppIndex);
+               }//If currProcIndex does = -1, the app is finished
+               else
+               {
+                  Console.WriteLine("PID " + (currAppIndex + 1) + " – Exit system");
+                  Console.WriteLine("SYSTEM – Ending process (TIME)");
                }
-               //Test if interupt Queue is empty
             }
 
          }
