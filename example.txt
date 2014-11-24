@@ -190,6 +190,8 @@ namespace simulator
 
         static void log(string str)
         {
+            string path = Directory.GetCurrentDirectory();
+
             if (GlobalVariable.logToMonitor == true)
             {
                 Console.WriteLine(str);
@@ -197,7 +199,7 @@ namespace simulator
 
             if (GlobalVariable.logToFile == true)
             {
-                using (StreamWriter writer = new StreamWriter("C://Users/Eddie/Desktop/simulator/log.txt", true))
+                using (StreamWriter writer = new StreamWriter(path + "/metadata.txt", true))
                 {
                     writer.WriteLine(str);
                 }
