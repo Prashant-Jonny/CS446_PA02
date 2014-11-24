@@ -10,6 +10,7 @@ namespace simulator
     // Global Variables
     public static class GlobalVariable
     {
+        // Config file variables
         public static string version;
         public static int quantum;
         public static string scheduler;
@@ -21,8 +22,14 @@ namespace simulator
         public static int kbTime;
         public static string memType;
         public static string log;
+
+        // clock related variables
         public static int clockTime = 0;
+
+        // thread related variables
         public static bool threadRunning = false;
+
+        // logging related variables
         public static bool logToFile = false;
         public static bool logToMonitor = false;
     }
@@ -190,6 +197,8 @@ namespace simulator
 
         static void log(string str)
         {
+            string path = Directory.GetCurrentDirectory();
+
             if (GlobalVariable.logToMonitor == true)
             {
                 Console.WriteLine(str);
@@ -197,7 +206,7 @@ namespace simulator
 
             if (GlobalVariable.logToFile == true)
             {
-                using (StreamWriter writer = new StreamWriter("C://Users/Eddie/Desktop/simulator/log.txt", true))
+                using (StreamWriter writer = new StreamWriter(path + "/log.txt", true))
                 {
                     writer.WriteLine(str);
                 }
@@ -274,20 +283,6 @@ namespace simulator
                     GlobalVariable.kbTime = int.Parse(lines[9]);
                     GlobalVariable.memType = lines[10];
                     GlobalVariable.log = lines[11];
-
-                    /*// TESTING GLOBAL VARIABLES
-                    Console.WriteLine(GlobalVariable.version);
-                    Console.WriteLine(GlobalVariable.quantum);
-                    Console.WriteLine(GlobalVariable.scheduler);
-                    Console.WriteLine(GlobalVariable.filePath);
-                    Console.WriteLine(GlobalVariable.procTime);
-                    Console.WriteLine(GlobalVariable.monitorTime);
-                    Console.WriteLine(GlobalVariable.hdTime);
-                    Console.WriteLine(GlobalVariable.printerTime);
-                    Console.WriteLine(GlobalVariable.kbTime);
-                    Console.WriteLine(GlobalVariable.memType);
-                    Console.WriteLine(GlobalVariable.log); */
-
                 }
 
                 catch
@@ -322,6 +317,11 @@ namespace simulator
             else
             {
                 GlobalVariable.logToMonitor = true;
+            }
+
+            if( File.Exists(Directory.GetCurrentDirectory() + "/log.txt"))
+            {
+                File.Delete(Directory.GetCurrentDirectory() + "/log.txt");
             }
 
             // Here we open the file containing the meta data for our OS to process
@@ -367,7 +367,6 @@ namespace simulator
             //Begin to store data in proper structures (ourAppList)
             foreach (string currentLine in ourData)
             {
-                //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
                 // the switch statement is based on the current line of the list in our data list
                 switch (currentLine[0])
                 {
@@ -502,26 +501,6 @@ namespace simulator
                         }
                 }
             }
-
-            /*// Check if all data was read in correctly
-            foreach (Application a in ourAppList)
-            {
-                Console.WriteLine("PID #" + a.PIDNum);
-                Console.WriteLine("NumProc" + a.numProc);
-                Console.WriteLine("ProcRem" + a.procRem);
-                for (tempInt = 0; tempInt < a.procList.Count; tempInt++)
-                {
-                    Console.WriteLine("\t" + "Init Ct @ " + tempInt + " = " + a.procList[tempInt].initCT);
-                    Console.WriteLine("\t" + "Rem  Ct @ " + tempInt + " = " + a.procList[tempInt].remCT);
-                    for (int abc = 0; abc < a.procList[tempInt].ioList.Count; abc++)
-                    {
-                        Console.WriteLine("\t" + "\t" + "\t" + a.procList[tempInt].ioList[abc].initCT);
-                        Console.WriteLine("\t" + "\t" + "\t" + a.procList[tempInt].ioList[abc].remCT);
-                        Console.WriteLine("\t" + "\t" + "\t" + a.procList[tempInt].ioList[abc].type);
-                        Console.WriteLine("\t" + "\t" + "\t" + a.procList[tempInt].ioList[abc].descriptor);
-                    }
-                }
-            }*/
 
             if (GlobalVariable.scheduler == "RR")
             {
