@@ -326,6 +326,11 @@ namespace simulator
                 GlobalVariable.logToMonitor = true;
             }
 
+            if( File.Exists(Directory.GetCurrentDirectory() + "/log.txt"))
+            {
+                File.Delete(Directory.GetCurrentDirectory() + "/log.txt");
+            }
+
             // Here we open the file containing the meta data for our OS to process
             FileStream readStream = File.OpenRead("C://Users/Eddie/Desktop/simulator/metadata.txt");
             TextReader textReader = new StreamReader(readStream);
