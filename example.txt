@@ -72,20 +72,24 @@ namespace simulator
         static void startThread(Application threadedApp, IO threadedIO)
         {
             GlobalVariable.threadRunning = true;
+
             while (GlobalVariable.clockTime < threadedIO.endTime)
             {
                 //Wait for clock to be past endtime
             }
+
             //The IO Operation has finished, so set remCT to 0
             threadedIO.remCT = 0;
             //Display message that notifies it finished
-            Console.WriteLine("PID " + threadedApp.PIDNum + " – " + threadedIO.type + ", " + threadedIO.descriptor + " completed <" + GlobalVariable.clockTime + '>');
+            log("PID " + threadedApp.PIDNum + " – " + threadedIO.type + ", " + threadedIO.descriptor + " completed <" + GlobalVariable.clockTime + '>');
             GlobalVariable.threadRunning = false;
         }
+
         static int findCycleTime(string s)      //Determines cycle time in our meta-data string
         {
             int len = s.Length;
             int tempInt = 0;
+
             for (int i = 0; i < len; i++)
             {
                 if (s[i] == ')' && (i + 2) < len)
@@ -93,11 +97,13 @@ namespace simulator
                     tempInt = (int)(s[i + 1] - 48) * 10;
                     tempInt += (int)(s[i + 2] - 48);
                 }
+
                 else if (s[i] == ')')
                 {
                     tempInt = (int)(s[i + 1] - 48);
                 }
             }
+
             return tempInt;
         }
 
@@ -105,11 +111,13 @@ namespace simulator
         {
             int len = s.Length, x = 0;
             string tempString = null;
+
             for (int i = 0; i < len; i++)
             {
                 if (s[i] == '(')
                 {
                     x = i + 1;         //Set the tempInt to the letter after (
+
                     while (s[x] != ')')  //Iterate through and get characters between ()
                     {
                         tempString += s[x];
@@ -117,6 +125,7 @@ namespace simulator
                     }
                 }
             }
+
             return tempString;//Return the value (i.e. "monitor" or "keyboard")
         }
 
@@ -124,6 +133,7 @@ namespace simulator
         {
             dest.initCT = src.initCT;
             dest.remCT = src.remCT;
+
             for (int x = 0; x < src.ioList.Count; x++)
             {
                 IO newIO = new IO();
@@ -140,6 +150,7 @@ namespace simulator
             dest.PIDNum = src.PIDNum;
             dest.numProc = src.numProc;
             dest.procRem = src.procRem;
+
             for (int x = 0; x < src.procList.Count; x++)
             {
                 Process newProcess = new Process();
@@ -157,6 +168,7 @@ namespace simulator
                     return x;
                 }
             }
+
             return -1;
         }
 
@@ -172,6 +184,7 @@ namespace simulator
                     }
                 }
             }
+
             return -1;
         }
 
@@ -197,18 +210,17 @@ namespace simulator
               Variables 
             -----------*/
 
-            string configFile, configPath;
-            bool appStarted = false, procStarted = false;
-            int appIndex = 0, tempInt = 0;            // Application and process index variables
+            string configFile, 
+                   configPath;
+            bool appStarted = false, 
+                 procStarted = false;
+            int appIndex = 0, 
+                tempInt = 0;            // Application and process index variables
             List<string> ourData = new List<string>();               // Temporary list to hold all meta data
             List<Application> ourAppList = new List<Application>();  // Our application list
             Queue<int> appQueue = new Queue<int>();
             Application tempApp = new Application();
             Process tempProc = new Process();
-
-            //string dataFile = File.ReadAllText(@"C:\Users\team8\Desktop\exampleFile.txt");//Used on cpe lab comp
-            string dataFile = "S(start)0; A(start)0; P(run)13; I(keyboard)5; P(run)6; O(monitor)5; P(run)5; I(hard drive)5; P(run)7; A(end)0; A(start)0; P(run)10; I(keyboard)5; P(run)7; O(hard drive)5; P(run)15; A(end)0; A(start)0; P(run)13; I(hard drive)5; P(run)14; O(hard drive)5; P(run)13; I(hard drive)5; P(run)10; S(end)0.";
-            //ABOVE IS AN EXAMPLE^ WE WILL FIX LATER
 
             /*-----------------------------------------------------------
               Read in the configuration file from command-line argument 
@@ -247,7 +259,6 @@ namespace simulator
                             lines[index] = lines[index].Trim();
 
                             //Console.WriteLine(lines[index]);
-
                         }
                     }
 
@@ -291,68 +302,79 @@ namespace simulator
               Read in the meta-data to their respectable classes
             ----------------------------------------------------*/
 
+            // if the config file states that the OS needs to log to both a file and the monitor we set 2 bools to true 
+            // so that our logging function knows to send the output to a file and the monitor
             if(GlobalVariable.log == "Log to Both")
             {
                 GlobalVariable.logToFile = true;
                 GlobalVariable.logToMonitor = true;
             }
+
+            // if the config file states that the OS needs to only log to a file, we set a bool to true 
+            // so that our logging function knows to send the output to a file
             else if (GlobalVariable.log == "Log to File")
             {
                 GlobalVariable.logToFile = true;
             }
+
+            // if the config file states that the OS needs to only log to the monitor, we set a bool to true 
+            // so that our logging function knows to send the output to the monitor
             else
             {
                 GlobalVariable.logToMonitor = true;
             }
 
-            if(File.Exists("C://Users/Eddie/Desktop/simulator/log.txt") )
-            {}
-
-            else
-            {
-                //File.CreateText("C://Users/Eddie/Desktop/simulator/log.txt");
-            }
-
+            // Here we open the file containing the meta data for our OS to process
             FileStream readStream = File.OpenRead("C://Users/Eddie/Desktop/simulator/metadata.txt");
             TextReader textReader = new StreamReader(readStream);
 
+            // This is so that we can ignore the first line of the metadata file as well as the blank line
             string dummy = textReader.ReadLine();
             dummy = textReader.ReadLine();
 
+            // the textReader will get the rest of the text from the metadata file and place it in a string where it can be further processed
             string whatWasReadIn = textReader.ReadToEnd();
-            //Console.Write(whatWasReadIn); //Debugging Purposes
 
-            textReader.Close();
+            textReader.Close();// close the metadata file since we no longer need it
 
-            string x = whatWasReadIn;
+            // index1 is going to start as the first spot in the string and index 2 is going to start at the location of the first ;
+            // this is so that we can split the string into separate strings containing only the information between ;
+            int index1 = 0, index2 = whatWasReadIn.IndexOf(';');
 
-            int index1 = 0, index2 = x.IndexOf(';');
-
+            // while the second index is within the bounds of our data (its checking index2 since that one is always going to be farther than index1)
             while (index2 != -1)
             {
-                int q = index2 - index1;
-                //Console.WriteLine(x.Substring(index1, q));//Debugging
-                string temp = x.Substring(index1, q);
+                // we have a variable to hold the difference between index1 and index2 so that when we call the Substring function, we can give it a specific length to read
+                // temp is going to be given a substring of whatWasReadIn starting at index1 and going for a length equal to the difference
+                int difference = index2 - index1;
+                string temp = whatWasReadIn.Substring(index1, difference);
+
+                //temp will trim the white space from the front and back of the temp string and add it to a list of data
                 temp = temp.Trim();
                 ourData.Add(temp);
+
+                // index 1 is going to be set where index2 was and index 2 will be set to the ; after the one it is currently on
                 index1 = index2 + 1;
-                index2 = x.IndexOf(';', index2 + 1);
+                index2 = whatWasReadIn.IndexOf(';', index2 + 1);
             }
 
-            string temp2 = x.Substring(index1);
+            // this code is only to make sure that the last part of the meta data which will be s(end) is taken and placed into our data as well
+            string temp2 = whatWasReadIn.Substring(index1);
             temp2 = temp2.Trim();
-            ourData.Add(temp2);//Adds the final System End
+            ourData.Add(temp2);
 
 
             //Begin to store data in proper structures (ourAppList)
             foreach (string currentLine in ourData)
             {
                 //Console.WriteLine(currentLine);//Debugging (Displays all elements stored in our list)
+                // the switch statement is based on the current line of the list in our data list
                 switch (currentLine[0])
                 {
                     // Operating System Operations, Start & End
                     case 'S':
                         {
+                            // This is only to state that the OS is booting and setting up
                             if (findDescriptor(currentLine) == "start")
                             {
                                 log("SYSTEM - Boot, set up <" + GlobalVariable.clockTime + '>');
